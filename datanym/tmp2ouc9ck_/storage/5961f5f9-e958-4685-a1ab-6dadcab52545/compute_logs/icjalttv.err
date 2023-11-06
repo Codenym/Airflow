@@ -1,0 +1,7 @@
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39655 - LOGS_CAPTURED - Started capturing logs in process (pid: 39655).
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39655 - data_dictionary - STEP_START - Started execution of step "data_dictionary".
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39655 - data_dictionary - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - data_dictionary - Writing file at: /Users/isaacflath/github/codenym/DataPipelines/datanym/tmp2ouc9ck_/storage/data_dictionary using PickledObjectFilesystemIOManager...
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39655 - data_dictionary - ASSET_MATERIALIZATION - Materialized value data_dictionary.
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39655 - data_dictionary - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39655 - data_dictionary - STEP_SUCCESS - Finished execution of step "data_dictionary" in 175ms.

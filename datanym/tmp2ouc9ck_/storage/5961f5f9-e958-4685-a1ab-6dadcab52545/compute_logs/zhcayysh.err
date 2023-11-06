@@ -1,0 +1,35 @@
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39656 - LOGS_CAPTURED - Started capturing logs in process (pid: 39656).
+[32m2023-11-06 11:35:20 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39656 - raw_527_data - STEP_START - Started execution of step "raw_527_data".
+[32m2023-11-06 11:36:11 -0500[0m - dagster - [34mERROR[0m - [31m__ASSET_JOB - 5961f5f9-e958-4685-a1ab-6dadcab52545 - 39656 - raw_527_data - STEP_FAILURE - Execution of step "raw_527_data" failed.
+
+dagster._core.errors.DagsterExecutionStepExecutionError: Error occurred while executing op "raw_527_data"::
+
+FileNotFoundError: [Errno 2] No such file or directory: 'output_data/irs_527/raw_FullDataFile.txt/FullDataFile.txt'
+
+Stack Trace:
+  File "/Users/isaacflath/github/codenym/DataPipelines/venv/lib/python3.9/site-packages/dagster/_core/execution/plan/utils.py", line 54, in op_execution_error_boundary
+    yield
+  File "/Users/isaacflath/github/codenym/DataPipelines/venv/lib/python3.9/site-packages/dagster/_utils/__init__.py", line 461, in iterate_with_context
+    next_output = next(iterator)
+  File "/Users/isaacflath/github/codenym/DataPipelines/venv/lib/python3.9/site-packages/dagster/_core/execution/plan/compute_generator.py", line 131, in _coerce_op_compute_fn_to_iterator
+    result = invoke_compute_fn(
+  File "/Users/isaacflath/github/codenym/DataPipelines/venv/lib/python3.9/site-packages/dagster/_core/execution/plan/compute_generator.py", line 125, in invoke_compute_fn
+    return fn(context, **args_to_pass) if context_arg_provided else fn(**args_to_pass)
+  File "/Users/isaacflath/github/codenym/DataPipelines/datanym/datanym/IRS527/irs_527.py", line 24, in raw_527_data
+    clean_extraction_directory(zip_path, extract_path, final_path)
+  File "/Users/isaacflath/github/codenym/DataPipelines/datanym/datanym/IRS527/core.py", line 97, in clean_extraction_directory
+    shutil.move(str(source_file), str(final_path / data_file_name))
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/shutil.py", line 826, in move
+    copy_function(src, real_dst)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/shutil.py", line 435, in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/shutil.py", line 264, in copyfile
+    with open(src, 'rb') as fsrc, open(dst, 'wb') as fdst:
+
+The above exception occurred during handling of the following exception:
+FileNotFoundError: [Errno 2] No such file or directory: 'output_data/irs_527/unzipped/var/IRS/data/scripts/pofd/download/FullDataFile.txt' -> 'output_data/irs_527/raw_FullDataFile.txt/FullDataFile.txt'
+
+Stack Trace:
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/shutil.py", line 806, in move
+    os.rename(src, real_dst)
+[0m

@@ -1,0 +1,7 @@
+[32m2023-11-06 11:45:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - 39999 - LOGS_CAPTURED - Started capturing logs in process (pid: 39999).
+[32m2023-11-06 11:45:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - 39999 - raw_527_data - STEP_START - Started execution of step "raw_527_data".
+[32m2023-11-06 11:46:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - 39999 - raw_527_data - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+[32m2023-11-06 11:46:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - raw_527_data - Writing file at: /Users/isaacflath/github/codenym/DataPipelines/datanym/tmp2ouc9ck_/storage/raw_527_data using PickledObjectFilesystemIOManager...
+[32m2023-11-06 11:46:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - 39999 - raw_527_data - ASSET_MATERIALIZATION - Materialized value raw_527_data.
+[32m2023-11-06 11:46:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - 39999 - raw_527_data - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2023-11-06 11:46:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - d3dc4c61-001f-4781-997e-b92d1b90d7ce - 39999 - raw_527_data - STEP_SUCCESS - Finished execution of step "raw_527_data" in 43.97s.
