@@ -9,7 +9,9 @@ from .core import (extract_file_from_zip,
                    download_file,
                    clean_extraction_directory)
 
-from dagster import asset
+from dagster import (asset,
+                     get_dagster_logger,
+                     AssetExecutionContext)
 
 
 @asset
@@ -106,6 +108,7 @@ def parse_row(row: list, mapping: list) -> dict:
                     the list corresponds to the column index in the row.
     :returns: A dictionary of cleaned column values with keys corresponding to the mapping.
     """
+    logger = get_dagster_logger()
 
     parsed_row = {}
     for i, cell in enumerate(row):
@@ -116,9 +119,10 @@ def parse_row(row: list, mapping: list) -> dict:
             if cell == '':
                 pass
             else:
+                logger.error(f"Error parsing cell: {cell} at position {i} in row: {row}")
                 raise e
         except Exception as e:
-            print(row)
+            logger.error(f"Error parsing cell: {cell} at position {i} in row: {row}")
             raise e
     return parsed_row
 
@@ -131,10 +135,12 @@ def process_row(row: list, mappings: dict, records: dict) -> None:
     :param mappings: A dictionary mapping form types to their corresponding parsers.
     :param records: A dictionary of lists, where each key is a form type and each value is a list of records.
     """
+    logger = get_dagster_logger()
+
     form_type = str(row[0])
 
     if form_type in ('H', 'F'):
-        print(row)
+        logger.info(row)  # metadata
     else:
         parsed_row = parse_row(row, mappings[form_type])
         records[form_type].append(parsed_row)
@@ -163,22 +169,45 @@ def fix_malformed(line: str) -> str:
 
 
 @asset
-def clean_527_data(raw_527_data: str, data_dictionary: dict):
+def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dictionary: dict):
     """
     Processes the raw_527_data file using the provided data_dictionary mappings for each form type.
     """
+    logger = get_dagster_logger()
     records = defaultdict(list)
     with io.open(raw_527_data, 'r', encoding='ISO-8859-1') as raw_file:
         reader = csv.reader(map(fix_malformed, raw_file), delimiter='|')
-        for i, row in enumerate(reader):
-            if len(row) == 0:
-                continue
-            if row[0] in data_dictionary.keys():
-                process_row(previous_row, data_dictionary, records)
-                previous_row = row
-            elif row[0] in ('H', 'F'):
-                previous_row = row
-            else:
-                previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
+        try:
+            for i, row in enumerate(reader):
+                if len(row) == 0:
+                    continue
+                if row[0] in data_dictionary.keys():
+                    process_row(previous_row, data_dictionary, records)
+                    previous_row = row
+                elif row[0] in ('H', 'F'):
+                    previous_row = row
+                    if row[0] == 'H':
+                        context.add_output_metadata(
+                            metadata={
+                                "Header Transmission Date": row[1],
+                                "Header Transmission Time": row[2],
+                                "File ID Modifier": row[3],
+                            }
+                        )
+                    elif row[0] == 'F':
+                        context.add_output_metadata(
+                            metadata={
+                                "Footer Transmission Date": row[1],
+                                "Footer Transmission Time": row[2],
+                                "Footer Record Count": row[3],
+                            }
+                        )
+                else:
+                    previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
+                if i % 1000000 == 0:
+                    logger.info(f"Processed {i / 1000000}M rows processed so far.")
+        except Exception as e:
+            logger.error(f"Error processing {i}th row: {row}")
+            raise e
 
     return records
