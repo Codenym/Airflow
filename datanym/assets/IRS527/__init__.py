@@ -5,5 +5,5 @@
 # all_assets = load_assets_from_modules([irs_527])
 #
 # defs = Definitions(
-#     datanym=all_assets,
+#     assets=all_assets,
 # )

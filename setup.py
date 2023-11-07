@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="datanym",
+    name="assets",
     packages=find_packages(exclude=["tests"]),
     install_requires=[
         "dagster",

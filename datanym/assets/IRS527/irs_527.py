@@ -39,7 +39,7 @@ def data_dictionary():
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
     """
-    mappings_path = Path("datanym/IRS527/input_data/mappings.xlsx")
+    mappings_path = Path("datanym/assets/IRS527/input_data/mappings.xlsx")
     record_types = ["1", "D", "R", "E", "2", "A", "B"]
 
     # Load all mappings from the Excel file into a dictionary
