@@ -10,8 +10,11 @@ from .core import (extract_file_from_zip,
                    clean_extraction_directory)
 
 from dagster import (asset,
+                     AssetOut,
+                     multi_asset,
                      get_dagster_logger,
-                     AssetExecutionContext)
+                     AssetExecutionContext,
+                     MetadataValue)
 
 
 @asset
@@ -140,7 +143,7 @@ def process_row(row: list, mappings: dict, records: dict) -> None:
     form_type = str(row[0])
 
     if form_type in ('H', 'F'):
-        logger.info(row)  # metadata
+        logger.info(row)
     else:
         parsed_row = parse_row(row, mappings[form_type])
         records[form_type].append(parsed_row)
@@ -168,7 +171,17 @@ def fix_malformed(line: str) -> str:
     return line
 
 
-@asset
+@multi_asset(
+    outs={
+        "landing_527_form8871": AssetOut(),
+        "landing_527_form8871_directors_officers": AssetOut(),
+        "landing_527_form8871_related_entities": AssetOut(),
+        "landing_527_form8871_ein": AssetOut(),
+        "landing_527_form8872": AssetOut(),
+        "landing_527_form8872_schedule_a": AssetOut(),
+        "landing_527_form8872_schedule_b": AssetOut(),
+    }
+)
 def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dictionary: dict):
     """
     Processes the raw_527_data file using the provided data_dictionary mappings for each form type.
@@ -186,22 +199,6 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
                     previous_row = row
                 elif row[0] in ('H', 'F'):
                     previous_row = row
-                    if row[0] == 'H':
-                        context.add_output_metadata(
-                            metadata={
-                                "Header Transmission Date": row[1],
-                                "Header Transmission Time": row[2],
-                                "File ID Modifier": row[3],
-                            }
-                        )
-                    elif row[0] == 'F':
-                        context.add_output_metadata(
-                            metadata={
-                                "Footer Transmission Date": row[1],
-                                "Footer Transmission Time": row[2],
-                                "Footer Record Count": row[3],
-                            }
-                        )
                 else:
                     previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                 if i % 1000000 == 0:
@@ -210,4 +207,21 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
             logger.error(f"Error processing {i}th row: {row}")
             raise e
 
-    return records
+    outputs = {'1': "landing_527_form8871",
+               'D': "landing_527_form8871_directors_officers",
+               'R': "landing_527_form8871_related_entities",
+               'E': "landing_527_form8871_ein",
+               '2': "landing_527_form8872",
+               'A': "landing_527_form8872_schedule_a",
+               'B': "landing_527_form8872_schedule_b",
+               }
+    for key, output_asset in outputs.items():
+        context.add_output_metadata(
+            output_name=output_asset,
+            metadata={
+                "row_count": records[key].__len__(),
+                "Top 10": MetadataValue.md(pd.DataFrame(records[key][:10]).to_markdown()),
+            }
+        )
+
+    return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
