@@ -37,7 +37,7 @@ def data_dictionary():
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
     """
-    mappings_path = Path("input_data/IRS527/mappings.xlsx")
+    mappings_path = Path("datanym/IRS527/input_data/mappings.xlsx")
     record_types = ["1", "D", "R", "E", "2", "A", "B"]
 
     # Load all mappings from the Excel file into a dictionary
@@ -112,6 +112,11 @@ def parse_row(row: list, mapping: list) -> dict:
         try:
             parsed_cell = clean_cell(cell, mapping[i][1])
             parsed_row[mapping[i][0]] = parsed_cell
+        except KeyError as e:
+            if cell == '':
+                pass
+            else:
+                raise e
         except Exception as e:
             print(row)
             raise e
@@ -176,4 +181,4 @@ def clean_527_data(raw_527_data: str, data_dictionary: dict):
             else:
                 previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
 
-        return records
+    return records
