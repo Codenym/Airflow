@@ -6,54 +6,28 @@ import shutil
 import os
 
 
-def extract_file_from_zip(zip_path: Path, extract_path: Path):
+def extract_file_from_zip(zip_path: Path, extract_path: Path) -> None:
     """
-    Extracts the first file from a zip archive to a specified path.
+    Extracts the first file from a ZIP archive into a specified directory.
 
-    Parameters:
-    - zip_path: A pathlib.Path to the zip file.
-    - extract_path: A pathlib.Path where the file will be extracted to.
-
-    Returns:
-    - A boolean indicating if the extraction was successful.
-
-    Raises:
-    - FileNotFoundError: If the zip file does not exist.
-    - zipfile.BadZipFile: If the zip file is corrupt or otherwise unreadable.
-    - KeyError: If the specified file to extract is not found within the zip file.
-
-    Example usage:
-    - success = extract_file_from_zip(Path("/path/to/zipfile.zip"), Path("/path/to/extracted/file"))
+    :param zip_path: A Path object representing the ZIP archive file.
+    :param extract_path: A Path object representing the target directory to extract the file.
     """
-    if not zip_path.is_file():
-        raise FileNotFoundError(f"The zip file {zip_path} does not exist.")
 
     if not extract_path.exists():
         extract_path.mkdir(parents=True, exist_ok=True)
 
-    try:
-        with zipfile.ZipFile(zip_path, 'r') as zipped_archive:
-            data_file = zipped_archive.namelist()[0]
-            zipped_archive.extract(data_file, extract_path)
-    except zipfile.BadZipFile as e:
-        raise zipfile.BadZipFile(f"The file {zip_path} is not a valid zip archive.") from e
-    except KeyError as e:
-        raise KeyError(f"The file {data_file} is not found in the zip archive.") from e
-
-    return True
+    with zipfile.ZipFile(zip_path, 'r') as zipped_archive:
+        data_file = zipped_archive.namelist()[0]
+        zipped_archive.extract(data_file, extract_path)
 
 
 def download_file(url: str, dl_fname: Path) -> None:
     """
-    Downloads a file from the given URL to a local path.
+    Downloads a file from a given URL to a specified local file path, creating any new directories as needed.
 
-    Parameters:
-    url (str): The URL from which to download the file.
-    dl_fname (str): The local file path to save the downloaded file.
-
-    Raises:
-    ValueError: If the URL is invalid or the download fails.
-    IOError: If there are issues writing the file to the disk.
+   :param url: The URL of the file to download. Must be a non-empty string.
+   :param dl_fname: Path to where the downloaded file will be saved, including file name
     """
     # Validate the URL
     if not isinstance(url, str) or not url:
@@ -65,29 +39,25 @@ def download_file(url: str, dl_fname: Path) -> None:
 
     dl_fname.parent.mkdir(parents=True, exist_ok=True)  # Create parent directories if necessary
 
-    try:
-        response = requests.get(url, stream=True)
-        response.raise_for_status()  # Raise an HTTPError if the HTTP request returned an unsuccessful status code
+    response = requests.get(url, stream=True)
+    response.raise_for_status()  # Raise an HTTPError if the HTTP request returned an unsuccessful status code
 
-        with open(dl_fname, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=30720):
-                f.write(chunk)
-    except requests.RequestException as e:
-        raise ValueError(f"Failed to download the file: {e}")
-    except IOError as e:
-        raise IOError(f"Failed to save the file: {e}")
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {e}")
+    with open(dl_fname, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=30720):
+            f.write(chunk)
 
 
-def clean_extraction_directory(zip_path: Path, extract_path: Path, final_path: Path):
+
+def clean_extraction_directory(zip_path: Path, extract_path: Path, final_path: Path) -> None:
     """
-    Move the extracted data file to a final location, then clean up the extraction directory and original zip file.
+    Cleans up directories after data extraction by moving a specific data file to a final destination and deleting
+        the extraction directory and original zip file.
 
-    :param zip_path: A Path object pointing to the zip file to be removed.
-    :param extract_path: A Path object pointing to the extraction directory to be cleaned up.
-    :param final_path: A Path object pointing to the final destination of the data file.
+    :param Path zip_path: The path to the original zip file.
+    :param Path extract_path: The path to the extraction directory where the zip file was initially extracted to.
+    :param Path final_path: The target path where the data file should be moved to.
     """
+
     source_file = extract_path / "var" / "IRS" / "data" / "scripts" / "pofd" / "download" / "FullDataFile.txt"
 
     # Move data file to the final path
@@ -103,8 +73,5 @@ def clean_extraction_directory(zip_path: Path, extract_path: Path, final_path: P
     if zip_path.exists():
         os.remove(str(zip_path))
 
-   # zip_path = (base_dir / 'data.zip')
-   #  extract_path = (base_dir / 'unzipped/')
-   #  final_path = (base_dir / 'raw_FullDataFile.txt')
 
 
