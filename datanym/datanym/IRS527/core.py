@@ -1,7 +1,6 @@
 import requests
 from pathlib import Path
 import zipfile
-import logging
 import shutil
 import os
 
