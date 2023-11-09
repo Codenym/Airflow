@@ -1,0 +1,6 @@
+[32m2023-11-09 08:04:51 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8bd28f51-6de6-49f0-af73-b201ea8bf357 - 88604 - LOGS_CAPTURED - Started capturing logs in process (pid: 88604).
+[32m2023-11-09 08:04:51 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8bd28f51-6de6-49f0-af73-b201ea8bf357 - 88604 - raw_527_data - STEP_START - Started execution of step "raw_527_data".
+[32m2023-11-09 08:05:40 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8bd28f51-6de6-49f0-af73-b201ea8bf357 - 88604 - raw_527_data - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+[32m2023-11-09 08:05:40 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8bd28f51-6de6-49f0-af73-b201ea8bf357 - 88604 - raw_527_data - ASSET_MATERIALIZATION - Materialized value raw_527_data.
+[32m2023-11-09 08:05:40 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8bd28f51-6de6-49f0-af73-b201ea8bf357 - 88604 - raw_527_data - HANDLED_OUTPUT - Handled output "result" using IO manager "local_io_manager"
+[32m2023-11-09 08:05:40 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 8bd28f51-6de6-49f0-af73-b201ea8bf357 - 88604 - raw_527_data - STEP_SUCCESS - Finished execution of step "raw_527_data" in 48.76s.
