@@ -17,7 +17,7 @@ from dagster import (asset,
                      MetadataValue)
 
 
-@asset
+@asset(io_manager_key="local_io_manager")
 def raw_527_data():
     """
     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
@@ -37,7 +37,7 @@ def raw_527_data():
     return str(final_path)
 
 
-@asset
+@asset(io_manager_key="local_io_manager")
 def data_dictionary():
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
@@ -173,13 +173,13 @@ def fix_malformed(line: str) -> str:
 
 @multi_asset(
     outs={
-        "landing_527_form8871": AssetOut(),
-        "landing_527_form8871_directors_officers": AssetOut(),
-        "landing_527_form8871_related_entities": AssetOut(),
-        "landing_527_form8871_ein": AssetOut(),
-        "landing_527_form8872": AssetOut(),
-        "landing_527_form8872_schedule_a": AssetOut(),
-        "landing_527_form8872_schedule_b": AssetOut(),
+        "landing_527_form8871": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_527_form8871_directors_officers": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_527_form8871_related_entities": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_527_form8871_ein": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_527_form8872": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_527_form8872_schedule_a": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_527_form8872_schedule_b": AssetOut(io_manager_key="local_to_s3_io_manager"),
     }
 )
 def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dictionary: dict):
@@ -225,3 +225,4 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
         )
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
+
