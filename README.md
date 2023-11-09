@@ -1,7 +1,5 @@
 # Codenym Data Pielines
 
-This is a [Dagster](https://dagster.io/) project.
-
 ## IRS 527 Pipeline
 
 + **Code:** [Pipeline Code](datanym/assets/IRS527)
