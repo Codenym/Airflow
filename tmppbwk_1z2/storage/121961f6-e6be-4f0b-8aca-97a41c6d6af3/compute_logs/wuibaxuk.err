@@ -1,6 +1,0 @@
-[32m2023-11-09 08:22:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 121961f6-e6be-4f0b-8aca-97a41c6d6af3 - 89381 - LOGS_CAPTURED - Started capturing logs in process (pid: 89381).
-[32m2023-11-09 08:22:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 121961f6-e6be-4f0b-8aca-97a41c6d6af3 - 89381 - data_dictionary - STEP_START - Started execution of step "data_dictionary".
-[32m2023-11-09 08:22:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 121961f6-e6be-4f0b-8aca-97a41c6d6af3 - 89381 - data_dictionary - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
-[32m2023-11-09 08:22:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 121961f6-e6be-4f0b-8aca-97a41c6d6af3 - 89381 - data_dictionary - ASSET_MATERIALIZATION - Materialized value data_dictionary.
-[32m2023-11-09 08:22:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 121961f6-e6be-4f0b-8aca-97a41c6d6af3 - 89381 - data_dictionary - HANDLED_OUTPUT - Handled output "result" using IO manager "local_io_manager"
-[32m2023-11-09 08:22:01 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 121961f6-e6be-4f0b-8aca-97a41c6d6af3 - 89381 - data_dictionary - STEP_SUCCESS - Finished execution of step "data_dictionary" in 239ms.

@@ -1,6 +1,0 @@
-[32m2023-11-09 07:54:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - acc90be9-c375-4f5e-872b-e25df047f29d - 88326 - LOGS_CAPTURED - Started capturing logs in process (pid: 88326).
-[32m2023-11-09 07:54:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - acc90be9-c375-4f5e-872b-e25df047f29d - 88326 - data_dictionary - STEP_START - Started execution of step "data_dictionary".
-[32m2023-11-09 07:54:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - acc90be9-c375-4f5e-872b-e25df047f29d - 88326 - data_dictionary - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
-[32m2023-11-09 07:54:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - acc90be9-c375-4f5e-872b-e25df047f29d - 88326 - data_dictionary - ASSET_MATERIALIZATION - Materialized value data_dictionary.
-[32m2023-11-09 07:54:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - acc90be9-c375-4f5e-872b-e25df047f29d - 88326 - data_dictionary - HANDLED_OUTPUT - Handled output "result" using IO manager "local_io_manager"
-[32m2023-11-09 07:54:17 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - acc90be9-c375-4f5e-872b-e25df047f29d - 88326 - data_dictionary - STEP_SUCCESS - Finished execution of step "data_dictionary" in 241ms.
