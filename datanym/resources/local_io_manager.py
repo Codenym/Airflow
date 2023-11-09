@@ -1,7 +1,8 @@
 from dagster import IOManager, OutputContext, InputContext
 import pickle
-from pathlib import Path
 from .utils import get_file_path
+from .output_metadata import add_metadata
+
 
 class LocalPickleIOManager(IOManager):
     """
@@ -11,6 +12,7 @@ class LocalPickleIOManager(IOManager):
 
     :param local_directory_path: The base directory path for storing output data files.
     """
+
     def __init__(self, local_directory_path: str):
         """
         :param local_directory_path: The file system path where data files will be stored.
@@ -28,11 +30,7 @@ class LocalPickleIOManager(IOManager):
         with open(output_path, "wb") as handle:
             pickle.dump(obj, handle, 4)
 
-        context.add_output_metadata(
-            metadata={
-                "output_location": output_path
-            }
-        )
+        add_metadata(context, obj, str(output_path))
 
     def load_input(self, context: InputContext):
         """

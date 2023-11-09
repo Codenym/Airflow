@@ -5,6 +5,7 @@ import boto3
 import csv
 import pandas as pd
 from typing import Union
+from .output_metadata import add_metadata
 
 
 class LocalPickleToS3CSVIOManager(IOManager):
@@ -48,11 +49,7 @@ class LocalPickleToS3CSVIOManager(IOManager):
                        Bucket=self.s3_bucket,
                        Key=s3_key)
 
-        context.add_output_metadata(
-            metadata={
-                "output_location": f"s3://{self.s3_bucket}/{s3_key}"
-            }
-        )
+        add_metadata(context, obj, s3_key)
 
     def load_input(self, context: InputContext) -> any:
         """

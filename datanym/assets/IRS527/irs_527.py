@@ -14,7 +14,7 @@ from dagster import (asset,
                      multi_asset,
                      get_dagster_logger,
                      AssetExecutionContext,
-                     MetadataValue)
+                     )
 
 
 @asset(io_manager_key="local_io_manager")
@@ -215,14 +215,7 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
                'A': "landing_527_form8872_schedule_a",
                'B': "landing_527_form8872_schedule_b",
                }
-    for key, output_asset in outputs.items():
-        context.add_output_metadata(
-            output_name=output_asset,
-            metadata={
-                "row_count": records[key].__len__(),
-                "Top 10": MetadataValue.md(pd.DataFrame(records[key][:10]).to_markdown()),
-            }
-        )
+
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
