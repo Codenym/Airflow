@@ -6,6 +6,6 @@ from .resources.local_io_manager import local_io_manager
 defs = Definitions(
     assets=load_assets_from_modules([irs_527]),
     resources={
-        'local_io_manager': local_io_manager,
+        'io_manager': local_io_manager,
     },
 )

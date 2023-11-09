@@ -5,8 +5,10 @@ setup(
     packages=find_packages(exclude=["tests"]),
     install_requires=[
         "dagster",
+        "dagster_aws",
         "openpyxl",
-        "pandas"
+        "pandas",
+
     ],
     extras_require={"dev": ["dagster-webserver", "pytest"]},
 )
