@@ -4,8 +4,8 @@ This is a [Dagster](https://dagster.io/) project.
 
 ## IRS 527 Pipeline
 
-+ Code: [Pipeline Code](datanym/assets/IRS527)
-+ Data Source: [IRS political action website](https://www.irs.gov/charities-non-profits/political-organizations/political-organization-filing-and-disclosure)
++ **Code:** [Pipeline Code](datanym/assets/IRS527)
++ **Data Source:** [IRS political action website](https://www.irs.gov/charities-non-profits/political-organizations/political-organization-filing-and-disclosure)
 
 ### Form 8871: 
 
