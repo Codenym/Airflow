@@ -18,7 +18,7 @@ If you'd like to contribute, you should start an issue explaining what you'd lik
 ### IRS 527 Pipeline
 
 + **Code:** [Pipeline Code](datanym/assets/IRS527)
-+ **Data Source:** [IRS political action website](https://www.irs.gov/charities-non-profits/political-organizations/political-organization-filing-and-disclosure)
++ **Source:** [IRS political organizations website](https://www.irs.gov/charities-non-profits/political-organizations/political-organization-filing-and-disclosure)
 
 #### Form 8871
 
