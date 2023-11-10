@@ -173,13 +173,13 @@ def fix_malformed(line: str) -> str:
 
 @multi_asset(
     outs={
-        "landing_527_form8871": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "landing_527_form8871_directors_officers": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "landing_527_form8871_related_entities": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "landing_527_form8871_ein": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "landing_527_form8872": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "landing_527_form8872_schedule_a": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "landing_527_form8872_schedule_b": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8871_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8871_directors_officers_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8871_related_entities_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8871_ein_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8872_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8872_schedule_a_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "form8872_schedule_b_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
     }
 )
 def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dictionary: dict):
@@ -207,68 +207,110 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
             logger.error(f"Error processing {i}th row: {row}")
             raise e
 
-    outputs = {'1': "landing_527_form8871",
-               'D': "landing_527_form8871_directors_officers",
-               'R': "landing_527_form8871_related_entities",
-               'E': "landing_527_form8871_ein",
-               '2': "landing_527_form8872",
-               'A': "landing_527_form8872_schedule_a",
-               'B': "landing_527_form8872_schedule_b",
+    outputs = {'1': "form8871_staging",
+               'D': "form8871_directors_officers_staging",
+               'R': "form8871_related_entities_staging",
+               'E': "form8871_ein_staging",
+               '2': "form8872_staging",
+               'A': "form8872_schedule_a_staging",
+               'B': "form8872_schedule_b_staging",
                }
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8871_ein(landing_527_form8871_ein):
-    return landing_527_form8871_ein
-
-@asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8871_directors(landing_527_form8871_directors_officers):
-    return landing_527_form8871_directors_officers
-
-@asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8871_entities(landing_527_form8871_related_entities):
-    return landing_527_form8871_related_entities
+def form8871_ein_landing(form8871_ein_staging):
+    return form8871_ein_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8871(landing_527_form8871):
-    return landing_527_form8871
+def form8871_directors_landing(form8871_directors_officers_staging):
+    return form8871_directors_officers_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8872(landing_527_form8872):
-    return landing_527_form8872
+def form8871_entities_landing(form8871_related_entities_staging):
+    return form8871_related_entities_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8872_a(landing_527_form8872_schedule_a):
-    return landing_527_form8872_schedule_a
+def form8871_landing(form8871_staging):
+    return form8871_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
-def sqlite_landing_form8872_b(landing_527_form8872_schedule_b):
-    return landing_527_form8872_schedule_b
+def form8872_landing(form8872_staging):
+    return form8872_staging
 
 
-# @asset(io_manager_key='s3_to_sqlite_manager')
-# def sqlite_8871_combined(sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8871_directors,
-#                          sqlite_landing_form8871_entities):
-#     return sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8871_directors, sqlite_landing_form8871_entities
-#
-#
-# @asset(io_manager_key='s3_to_sqlite_manager')
-# def sqlite_8872_combined(sqlite_landing_form8872, sqlite_landing_form8872_a, sqlite_landing_form8872_b):
-#     return sqlite_landing_form8872, sqlite_landing_form8872_a, sqlite_landing_form8872_b
-#
-#
-# @asset(io_manager_key='s3_to_sqlite_manager')
-# def big_contribution_527s(sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8872_a):
-#     return sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8872_a
+@asset(io_manager_key='s3_to_sqlite_manager')
+def form8872_schedule_a_landing(form8872_schedule_a_staging):
+    return form8872_schedule_a_staging
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def form8872_schedule_b_landing(form8872_schedule_b_staging):
+    return form8872_schedule_b_staging
+
+
+from dagster import MetadataValue
 
 #
-# def sqlite_clean_form8871_ein()
-#     pass
-# def datasette_heroku():
-#     pass
+@asset(io_manager_key="sqlite_manager")
+def organization_aggregated_contributions_expenditures(context, form8872_schedule_a_landing, form8872_schedule_b_landing):
+    sql = '''
+    with total_contributions as (
+        select org_name, sum(contribution_amount) as total_contributions
+        from form8872_schedule_a_landing
+        group by org_name
+    ), total_expenditures as (
+        select org_name, sum(expenditure_amount) as total_expenditures
+        from form8872_schedule_b_landing
+        group by org_name
+    )
+    select
+        org_name,
+        total_contributions,
+        total_expenditures
+    from total_contributions
+    full outer join total_expenditures USING (org_name)
+    ORDER BY total_contributions DESC
+    '''
+
+    return {'table_name': 'organization_aggregated_contributions_expenditures',
+            'sql_query': f"create table organization_aggregated_contributions_expenditures as {sql}",
+            'drop_table': True}
+
+
+    # import base64
+    # from io import BytesIO
+    #
+    # import matplotlib.pyplot as plt
+    #
+    # db = sqlite3.connect("/Users/isaacflath/github/codenym/DataPipelines/sqlite_527.db")
+    # cursor = db.cursor()
+    # cursor.execute(f"drop table if exists organization_aggregated_contributions_expenditures;")
+    # cursor.execute(f"create table organization_aggregated_contributions_expenditures as {sql};")
+    # db.commit()
+    #
+    # df = pd.read_sql(
+    #     f"select * from organization_aggregated_contributions_expenditures order by total_contributions desc limit 10",
+    #     db)
+    # context.add_output_metadata({'Top orgs by contributions': MetadataValue.md(df.to_markdown())})
+    # df[['org_name', 'total_expenditures']].plot.bar(x='org_name', y='total_expenditures')
+    # buffer = BytesIO()
+    # plt.savefig(buffer, format="png")
+    # image_data = base64.b64encode(buffer.getvalue())
+    #
+    # md_content = f"![img](data:image/png;base64,{image_data.decode()})"
+    # context.add_output_metadata({'Top orgs by contributions chart': MetadataValue.md(md_content)})
+    #
+    # df = pd.read_sql(
+    #     f"select * from organization_aggregated_contributions_expenditures order by total_expenditures desc limit 10",
+    #     db)
+    # context.add_output_metadata({'Top orgs by expenditures': MetadataValue.md(df.to_markdown())})
+    #
+    # db.close()
+
+    return sql

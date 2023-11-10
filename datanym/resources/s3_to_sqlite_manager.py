@@ -1,25 +1,50 @@
-from dagster import IOManager, OutputContext, InputContext, AssetKey
+from dagster import IOManager, OutputContext, InputContext
 import pandas as pd
-from typing import Union
 from .output_metadata import add_metadata
 import sqlite3
-import os
 from .utils import get_file_name
+from typing import Union
+from abc import abstractmethod
 
 
-class S3CSVtoSqliteIOManager(IOManager):
-    def __init__(self, sqlite_db: str):
-        self.sqlite_db = sqlite_db
+class S3CSVtoSqlIOManagerBase(IOManager):
+    def __init__(self, db_type: str, db_host: str, profile_name: str = 'codenym'):
+        self.db_host = db_host
+        self.db_type = db_type
+        self.profile_name = profile_name
 
-    def handle_output(self, context: OutputContext, obj):  # Union[pd.DataFrame, list[dict], tuple[dict]]):
-        con = sqlite3.connect(self.sqlite_db)
-        os.environ["AWS_DEFAULT_PROFILE"] = "codenym"
-        df = pd.read_csv(obj)
-        tbl_name = get_file_name(context).replace('sqlite_', '')
-        df.to_sql(tbl_name, con, if_exists='replace', index=False)
+    @staticmethod
+    def _get_table_name(context: Union[InputContext, OutputContext]):
+        # Eventually add schema here
+        return get_file_name(context)
 
-        add_metadata(context, obj, f"{self.sqlite_db}.{tbl_name}")
+    def load_input(self, context: InputContext) -> (str, str, str):
+        return {'db_type': self.db_type,
+                'db_host': self.db_host,
+                'context_name': self._get_table_name(context)}
 
-    def load_input(self, context: InputContext) -> any:
-        tbl_name = get_file_name(context)[:-4].replace('sqlite_', '')
-        return f"sqlite::{self.sqlite_db}::{tbl_name}"
+    def handle_output(self, context: OutputContext, obj: str):
+        self._move_to_sql(context, obj)
+        add_metadata(context, obj, f"{self.db_host}.{self._get_table_name(context)}")
+
+    @abstractmethod
+    def _connect(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _move_to_sql(self, context: OutputContext, obj: str):
+        raise NotImplementedError
+
+
+class S3CSVtoSqliteIOManager(S3CSVtoSqlIOManagerBase):
+
+    def __init__(self, db_host: str, profile_name: str = 'codenym'):
+        super().__init__(db_type='sqlite', db_host=db_host, profile_name=profile_name)
+
+    def _connect(self):
+        return sqlite3.connect(self.db_host)
+
+    def _move_to_sql(self, context: OutputContext, obj: str):
+        conn = self._connect()
+        df = pd.read_csv(obj, storage_options=dict(profile=self.profile_name))
+        df.to_sql(self._get_table_name(context), conn, if_exists='replace', index=False)
