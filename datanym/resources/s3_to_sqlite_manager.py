@@ -1,10 +1,10 @@
-from dagster import IOManager, OutputContext, InputContext
+from dagster import IOManager, InputContext, OutputContext, MetadataValue
 import pandas as pd
 from .output_metadata import add_metadata
 import sqlite3
-from .utils import get_file_name
 from typing import Union
 from abc import abstractmethod
+from contextlib import contextmanager
 
 
 class S3CSVtoSqlIOManagerBase(IOManager):
@@ -16,19 +16,25 @@ class S3CSVtoSqlIOManagerBase(IOManager):
     @staticmethod
     def _get_table_name(context: Union[InputContext, OutputContext]):
         # Eventually add schema here
-        return get_file_name(context)
+        return context.asset_key.path[-1]
 
     def load_input(self, context: InputContext) -> (str, str, str):
         return {'db_type': self.db_type,
                 'db_host': self.db_host,
-                'context_name': self._get_table_name(context)}
+                'table_name': self._get_table_name(context)}
 
     def handle_output(self, context: OutputContext, obj: str):
         self._move_to_sql(context, obj)
-        add_metadata(context, obj, f"{self.db_host}.{self._get_table_name(context)}")
+        metadata = {'upstream_s3_path': MetadataValue.text(obj),
+                    'db_type': MetadataValue.text(self.db_type),
+                    'db_host': MetadataValue.text(self.db_host),
+                    'table_name': MetadataValue.text(self._get_table_name(context))
+                    }
+        add_metadata(context, metadata)
 
     @abstractmethod
-    def _connect(self):
+    @contextmanager
+    def _connection_context(self):
         raise NotImplementedError
 
     @abstractmethod
@@ -41,10 +47,16 @@ class S3CSVtoSqliteIOManager(S3CSVtoSqlIOManagerBase):
     def __init__(self, db_host: str, profile_name: str = 'codenym'):
         super().__init__(db_type='sqlite', db_host=db_host, profile_name=profile_name)
 
-    def _connect(self):
-        return sqlite3.connect(self.db_host)
+    @contextmanager
+    def _connection_context(self):
+        conn = sqlite3.connect(self.db_host)
+        try:
+            yield conn
+        finally:
+            conn.commit()
+            conn.close()
 
     def _move_to_sql(self, context: OutputContext, obj: str):
-        conn = self._connect()
         df = pd.read_csv(obj, storage_options=dict(profile=self.profile_name))
-        df.to_sql(self._get_table_name(context), conn, if_exists='replace', index=False)
+        with self._connection_context() as conn:
+            df.to_sql(self._get_table_name(context), conn, if_exists='replace', index=False)

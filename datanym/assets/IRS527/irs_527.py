@@ -13,17 +13,16 @@ from dagster import (asset,
                      AssetOut,
                      multi_asset,
                      get_dagster_logger,
-                     AssetExecutionContext,
                      )
 
 
 @asset(io_manager_key="local_io_manager")
-def raw_527_data():
+def raw_527_data() -> Path:
     """
     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
     """
 
-    url = 'http://forms.irs.gov/app/pod/dataDownload/fullData'
+    url = 'https://forms.irs.gov/app/pod/dataDownload/fullData'
     base_dir = Path("output_data/irs_527")
 
     zip_path = (base_dir / 'data.zip')
@@ -34,11 +33,11 @@ def raw_527_data():
     extract_file_from_zip(zip_path, extract_path)
     clean_extraction_directory(zip_path, extract_path, final_path)
 
-    return str(final_path)
+    return final_path
 
 
 @asset(io_manager_key="local_io_manager")
-def data_dictionary():
+def data_dictionary() -> dict:
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
     """
@@ -73,7 +72,7 @@ def clean_cell(cell: str, cell_type: str) -> any:
                       'S' (or any other value) for string.
     :returns: The cleaned and converted cell content. Datetime, integers, ints,
               and floats are cast to appropriate types.  Strings are
-              uppercased, truncated to 50 characters, and 'null terms' are
+              uppercase, truncated to 50 characters, and 'null terms' are
               converted to None.
     """
 
@@ -182,7 +181,7 @@ def fix_malformed(line: str) -> str:
         "form8872_schedule_b_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
     }
 )
-def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dictionary: dict):
+def clean_527_data(raw_527_data: Path, data_dictionary: dict):
     """
     Processes the raw_527_data file using the provided data_dictionary mappings for each form type.
     """
@@ -203,70 +202,83 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
                     previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                 if i % 1000000 == 0:
                     logger.info(f"Processed {i / 1000000}M rows processed so far.")
+                    if i > 0: break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {row}")
             raise e
-
-    outputs = {'1': "form8871_staging",
-               'D': "form8871_directors_officers_staging",
-               'R': "form8871_related_entities_staging",
-               'E': "form8871_ein_staging",
-               '2': "form8872_staging",
-               'A': "form8872_schedule_a_staging",
-               'B': "form8872_schedule_b_staging",
-               }
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_ein_landing(form8871_ein_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8871_ein_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_directors_landing(form8871_directors_officers_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8871_directors_officers_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_entities_landing(form8871_related_entities_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8871_related_entities_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_landing(form8871_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8871_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8872_landing(form8872_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8872_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8872_schedule_a_landing(form8872_schedule_a_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8872_schedule_a_staging
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8872_schedule_b_landing(form8872_schedule_b_staging):
+    """
+    Loads data from s3 into sql
+    """
     return form8872_schedule_b_staging
 
 
-from dagster import MetadataValue
-
-#
 @asset(io_manager_key="sqlite_manager")
-def organization_aggregated_contributions_expenditures(context, form8872_schedule_a_landing, form8872_schedule_b_landing):
-    sql = '''
+def organization_aggregated_contributions_expenditures(form8872_schedule_a_landing, form8872_schedule_b_landing):
+    """
+    Creates analytics table for top organizations by contributions and expenditures
+    """
+    sql = f'''
     with total_contributions as (
         select org_name, sum(contribution_amount) as total_contributions
-        from form8872_schedule_a_landing
+        from {form8872_schedule_a_landing['table_name']}
         group by org_name
     ), total_expenditures as (
         select org_name, sum(expenditure_amount) as total_expenditures
-        from form8872_schedule_b_landing
+        from {form8872_schedule_b_landing['table_name']}
         group by org_name
     )
     select
@@ -281,7 +293,6 @@ def organization_aggregated_contributions_expenditures(context, form8872_schedul
     return {'table_name': 'organization_aggregated_contributions_expenditures',
             'sql_query': f"create table organization_aggregated_contributions_expenditures as {sql}",
             'drop_table': True}
-
 
     # import base64
     # from io import BytesIO
@@ -312,5 +323,3 @@ def organization_aggregated_contributions_expenditures(context, form8872_schedul
     # context.add_output_metadata({'Top orgs by expenditures': MetadataValue.md(df.to_markdown())})
     #
     # db.close()
-
-    return sql

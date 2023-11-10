@@ -1,7 +1,12 @@
+import pandas as pd
 from dagster import IOManager, OutputContext, InputContext
 import pickle
-from .utils import get_file_path
-from .output_metadata import add_metadata
+from .output_metadata import (
+    add_path_metadata,
+    add_dict_metadata,
+    add_dataframe_metadata,
+)
+from pathlib import Path
 
 
 class LocalPickleIOManager(IOManager):
@@ -13,7 +18,7 @@ class LocalPickleIOManager(IOManager):
     :param local_directory_path: The base directory path for storing output data files.
     """
 
-    def __init__(self, local_directory_path: str):
+    def __init__(self, local_directory_path: Path):
         """
         :param local_directory_path: The file system path where data files will be stored.
         """
@@ -26,11 +31,16 @@ class LocalPickleIOManager(IOManager):
         :param context: The context of the pipeline step producing the output.
         :param obj: The object to be serialized and stored.
         """
-        output_path = get_file_path(context, self.local_directory_path)
+
+        output_path = self.local_directory_path / context.asset_key.path[-1]
         with open(output_path, "wb") as handle:
             pickle.dump(obj, handle, 4)
 
-        add_metadata(context, obj, str(output_path))
+        context.add_output_metadata(metadata={"out|io manager path": output_path})
+        if isinstance(obj, Path):           add_path_metadata(context=context, obj=obj)
+        elif isinstance(obj, dict):         add_dict_metadata(context=context, obj=obj)
+        elif isinstance(obj, pd.DataFrame): add_dataframe_metadata(context=context, obj=obj)
+        else: raise ValueError(f"Unsupported type: {type(obj)}.  Add type LocalPickleIOManager/handle_output")
 
     def load_input(self, context: InputContext):
         """
@@ -39,5 +49,5 @@ class LocalPickleIOManager(IOManager):
          :param context: The context of the pipeline step consuming the input.
          :return: The deserialized object.
          """
-        with open(get_file_path(context, self.local_directory_path), "rb") as handle:
+        with open(self.local_directory_path / context.asset_key.path[-1], "rb") as handle:
             return pickle.load(handle)
