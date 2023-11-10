@@ -3,6 +3,7 @@ from dagster import Definitions, load_assets_from_modules
 from .assets.IRS527 import irs_527
 from .resources.local_io_manager import LocalPickleIOManager
 from .resources.local_to_s3_managers import LocalPickleToS3CSVIOManager
+from .resources.s3_to_sqlite_manager import S3CSVtoSqliteIOManager
 
 local_directory_path = "output_data"
 s3_bucket = 'datanym-pipeline'
@@ -15,6 +16,7 @@ defs = Definitions(
         'local_io_manager': local_io_manager,
         'local_to_s3_io_manager': LocalPickleToS3CSVIOManager(local_directory_path=local_directory_path,
                                                               s3_bucket=s3_bucket,
-                                                              s3_directory='irs_527/')
+                                                              s3_directory='irs_527/'),
+        's3_to_sqlite_manager': S3CSVtoSqliteIOManager('sqlite_527.db')
     },
 )

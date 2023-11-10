@@ -58,5 +58,4 @@ class LocalPickleToS3CSVIOManager(IOManager):
         :param context: The input context from Dagster, containing metadata and configuration.
         :return: The object loaded from the pickle file.
         """
-        with open(get_file_path(context, self.local_directory_path), "rb") as handle:
-            return pickle.load(handle)
+        return f"s3://{self.s3_bucket}/{self.s3_directory}/{get_file_name(context)}.csv"

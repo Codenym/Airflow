@@ -216,6 +216,59 @@ def clean_527_data(context: AssetExecutionContext, raw_527_data: str, data_dicti
                'B': "landing_527_form8872_schedule_b",
                }
 
-
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8871_ein(landing_527_form8871_ein):
+    return landing_527_form8871_ein
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8871_directors(landing_527_form8871_directors_officers):
+    return landing_527_form8871_directors_officers
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8871_entities(landing_527_form8871_related_entities):
+    return landing_527_form8871_related_entities
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8871(landing_527_form8871):
+    return landing_527_form8871
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8872(landing_527_form8872):
+    return landing_527_form8872
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8872_a(landing_527_form8872_schedule_a):
+    return landing_527_form8872_schedule_a
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def sqlite_landing_form8872_b(landing_527_form8872_schedule_b):
+    return landing_527_form8872_schedule_b
+
+
+# @asset(io_manager_key='s3_to_sqlite_manager')
+# def sqlite_8871_combined(sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8871_directors,
+#                          sqlite_landing_form8871_entities):
+#     return sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8871_directors, sqlite_landing_form8871_entities
+#
+#
+# @asset(io_manager_key='s3_to_sqlite_manager')
+# def sqlite_8872_combined(sqlite_landing_form8872, sqlite_landing_form8872_a, sqlite_landing_form8872_b):
+#     return sqlite_landing_form8872, sqlite_landing_form8872_a, sqlite_landing_form8872_b
+#
+#
+# @asset(io_manager_key='s3_to_sqlite_manager')
+# def big_contribution_527s(sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8872_a):
+#     return sqlite_landing_form8871, sqlite_landing_form8871_ein, sqlite_landing_form8872_a
+
+#
+# def sqlite_clean_form8871_ein()
+#     pass
+# def datasette_heroku():
+#     pass
