@@ -62,100 +62,24 @@ def data_dictionary() -> dict:
     return combined_mappings
 
 
-def clean_cell(cell: str, cell_type: str) -> any:
-    """
-    Cleans the content of a cell and converts it to a specified type.
-
-    :param cell: The cell content to be cleaned and converted.
-    :param cell_type: The type to convert the cell content to. Options are:
-                      'D' for datetime, 'I' for integer, 'N' for float, and
-                      'S' (or any other value) for string.
-    :returns: The cleaned and converted cell content. Datetime, integers, ints,
-              and floats are cast to appropriate types.  Strings are
-              uppercase, truncated to 50 characters, and 'null terms' are
-              converted to None.
-    """
-
-    null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A']
-
-    # if cell_type == 'D':
-    #     try:
-    #         return datetime.strptime(cell, '%Y-%m-%d %H:%M:%S')
-    #     except ValueError:
-    #         return datetime.strptime(cell, '%Y%m%d')
-    # elif cell_type == 'I':
-    #     return int(cell)
-    # elif cell_type == 'N':
-    #     return float(cell)
-    # else:
-    #     cell = cell.upper()
-    #     if len(cell) > 50:
-    #         cell = cell[0:50]
-    #     if cell in null_terms:
-    #         cell = None
-    # return cell
-    return None if cell in null_terms else cell
-
-
-def parse_row(row: list, mapping: list) -> dict:
-    """
-    Parses a single row into a dictionary according to the provided mapping.
-
-    Each element in the row is cleaned and transformed based on a corresponding function
-    found in the mapping, which associates column indices with a tuple consisting of the
-    target dictionary key and a transformation function.
-
-    :param row: List or tuple representing the row to be parsed.
-    :param mapping: List of tuples where each tuple contains a string (as dictionary key)
-                    and a function (for data transformation). The index of each tuple in
-                    the list corresponds to the column index in the row.
-    :returns: A dictionary of cleaned column values with keys corresponding to the mapping.
-    """
-    logger = get_dagster_logger()
-
+def process_row(row: list, mappings: dict, records: dict) -> None:
+    if row[0] == 'H': return
+    null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A',]
+    mapping = mappings[row[0]]
     parsed_row = {}
     for i, cell in enumerate(row):
+        cell = None if cell in null_terms else cell
         try:
-            parsed_cell = clean_cell(cell, mapping[i][1])
-            parsed_row[mapping[i][0]] = parsed_cell
+            parsed_row[mapping[i][0]] = cell
         except KeyError as e:
-            if cell == '':
-                pass
+            if cell == '': pass
             else:
-                logger.error(f"Error parsing cell: {cell} at position {i} in row: {row}")
+                print(cell)
                 raise e
-        except Exception as e:
-            logger.error(f"Error parsing cell: {cell} at position {i} in row: {row}")
-            raise e
-    return parsed_row
+    records[row[0]].append(parsed_row)
 
 
-def process_row(row: list, mappings: dict, records: dict) -> None:
-    """
-    Processes a single row based on its form type and updates the records collection.
-
-    :param row: A list or tuple representing a single data row, where the first element is the form type.
-    :param mappings: A dictionary mapping form types to their corresponding parsers.
-    :param records: A dictionary of lists, where each key is a form type and each value is a list of records.
-    """
-    logger = get_dagster_logger()
-
-    form_type = str(row[0])
-
-    if form_type in ('H', 'F'):
-        logger.info(row)
-    else:
-        parsed_row = parse_row(row, mappings[form_type])
-        records[form_type].append(parsed_row)
-
-
-def fix_malformed(line: str) -> str:
-    """
-    Corrects specific instances of malformed csv strings in a given line.
-
-    :param line: The input string that may contain malformed substrings.
-    :return: The corrected line with all specified malformed substrings replaced.
-    """
+def fix_malformed_row(line: str) -> str:
     malformed = (
         ('|"I Factor|', '|"I Factor"|'),
         ('''|"N/A'|''', '''|"N/A"|'''),
@@ -165,9 +89,7 @@ def fix_malformed(line: str) -> str:
     )
 
     for m in malformed:
-        if line.count(m[0]) > 0:
-            line = line.replace(m[0], m[1])
-
+        line = line.replace(m[0], m[1])
     return line
 
 
@@ -188,24 +110,24 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
     """
     logger = get_dagster_logger()
     records = defaultdict(list)
+
     with io.open(raw_527_data, 'r', encoding='ISO-8859-1') as raw_file:
-        reader = csv.reader(map(fix_malformed, raw_file), delimiter='|')
+        reader = csv.reader(map(fix_malformed_row, raw_file), delimiter='|')
         try:
             for i, row in enumerate(reader):
-                if len(row) == 0:
-                    continue
+                if len(row) == 0: continue
                 if row[0] in data_dictionary.keys():
                     process_row(previous_row, data_dictionary, records)
                     previous_row = row
-                elif row[0] in ('H', 'F'):
-                    previous_row = row
+                elif row[0] == 'H': previous_row = row
+                elif row[0] == 'F': process_row(previous_row, data_dictionary, records)
                 else:
                     previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                 if i % 1000000 == 0:
                     logger.info(f"Processed {i / 1000000}M rows processed so far.")
                     if i > 0: break
         except Exception as e:
-            logger.error(f"Error processing {i}th row: {row}")
+            logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
@@ -267,11 +189,8 @@ def form8872_schedule_b_landing(form8872_schedule_b_staging):
     return form8872_schedule_b_staging
 
 
-def load_fill_sql_file(sql_file: Path, replacements: tuple[tuple[str, str]] = None):
-    """Args should be dagster assets"""
+def load_fill_sql_file(sql_file: Path):
     with open(sql_file, 'r') as f: sql_query = f.read()
-    if replacements is not None:
-        for old, new in replacements: sql_query = sql_query.replace(old, new)
     return sql_query
 
 
@@ -364,7 +283,7 @@ def form8871_related_entities(form8871_related_entities_landing, addresses):
             'sql_query': sql_query,
             'sql_file': sql_file}
 
-#
+
 # @asset(io_manager_key="sqlite_manager")
 # def landing_cleanup(form8871, form8871_ein, form8871_directors,
 #                     form8871_related_entities, form8872, form8872_contributions,
@@ -373,32 +292,3 @@ def form8871_related_entities(form8871_related_entities_landing, addresses):
 #     sql_query = load_fill_sql_file(sql_file=sql_file)
 #     return {'sql_query': sql_query,
 #             'sql_file': sql_file}
-
-# @asset(io_manager_key="sqlite_manager")
-# def organization_aggregated_contributions_expenditures(form8872_schedule_a_landing, form8872_schedule_b_landing):
-#     """
-#     Creates analytics table for top organizations by contributions and expenditures
-#     """
-#
-#     sql = f'''
-#     with total_contributions as (
-#         select org_name, sum(contribution_amount) as total_contributions
-#         from {form8872_schedule_a_landing['table_name']}
-#         group by org_name
-#     ), total_expenditures as (
-#         select org_name, sum(expenditure_amount) as total_expenditures
-#         from {form8872_schedule_b_landing['table_name']}
-#         group by org_name
-#     )
-#     select
-#         org_name,
-#         total_contributions,
-#         total_expenditures
-#     from total_contributions
-#     full outer join total_expenditures USING (org_name)
-#     ORDER BY total_contributions DESC
-#     '''
-#
-#     return {'table_name': 'organization_aggregated_contributions_expenditures',
-#             'sql_query': f"create table organization_aggregated_contributions_expenditures as {sql}",
-#             'drop_table': True}
