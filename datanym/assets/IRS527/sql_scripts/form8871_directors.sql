@@ -10,8 +10,8 @@ create table form8871_directors
         entity_title      TEXT,
         entity_address_id int,
 
-        foreign key (form_id_number) references form8871_landing (form_id_number)
-            foreign key (entity_address_id) references form8871_addresses (address_id)
+        foreign key (form_id_number) references form8871_landing (form_id_number),
+        foreign key (entity_address_id) references addresses (address_id)
 
     );
 
