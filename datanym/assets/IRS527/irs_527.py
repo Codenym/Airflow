@@ -78,22 +78,23 @@ def clean_cell(cell: str, cell_type: str) -> any:
 
     null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A']
 
-    if cell_type == 'D':
-        try:
-            return datetime.strptime(cell, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            return datetime.strptime(cell, '%Y%m%d')
-    elif cell_type == 'I':
-        return int(cell)
-    elif cell_type == 'N':
-        return float(cell)
-    else:
-        cell = cell.upper()
-        if len(cell) > 50:
-            cell = cell[0:50]
-        if cell in null_terms:
-            cell = None
-    return cell
+    # if cell_type == 'D':
+    #     try:
+    #         return datetime.strptime(cell, '%Y-%m-%d %H:%M:%S')
+    #     except ValueError:
+    #         return datetime.strptime(cell, '%Y%m%d')
+    # elif cell_type == 'I':
+    #     return int(cell)
+    # elif cell_type == 'N':
+    #     return float(cell)
+    # else:
+    #     cell = cell.upper()
+    #     if len(cell) > 50:
+    #         cell = cell[0:50]
+    #     if cell in null_terms:
+    #         cell = None
+    # return cell
+    return None if cell in null_terms else cell
 
 
 def parse_row(row: list, mapping: list) -> dict:
@@ -227,7 +228,7 @@ def form8871_directors_landing(form8871_directors_officers_staging):
 
 
 @asset(io_manager_key='s3_to_sqlite_manager')
-def form8871_entities_landing(form8871_related_entities_staging):
+def form8871_related_entities_landing(form8871_related_entities_staging):
     """
     Loads data from s3 into sql
     """
@@ -266,60 +267,138 @@ def form8872_schedule_b_landing(form8872_schedule_b_staging):
     return form8872_schedule_b_staging
 
 
+def load_fill_sql_file(sql_file: Path, replacements: tuple[tuple[str, str]] = None):
+    """Args should be dagster assets"""
+    with open(sql_file, 'r') as f: sql_query = f.read()
+    if replacements is not None:
+        for old, new in replacements: sql_query = sql_query.replace(old, new)
+    return sql_query
+
+
 @asset(io_manager_key="sqlite_manager")
-def organization_aggregated_contributions_expenditures(form8872_schedule_a_landing, form8872_schedule_b_landing):
-    """
-    Creates analytics table for top organizations by contributions and expenditures
-    """
-    sql = f'''
-    with total_contributions as (
-        select org_name, sum(contribution_amount) as total_contributions
-        from {form8872_schedule_a_landing['table_name']}
-        group by org_name
-    ), total_expenditures as (
-        select org_name, sum(expenditure_amount) as total_expenditures
-        from {form8872_schedule_b_landing['table_name']}
-        group by org_name
-    )
-    select
-        org_name,
-        total_contributions,
-        total_expenditures
-    from total_contributions
-    full outer join total_expenditures USING (org_name)
-    ORDER BY total_contributions DESC
-    '''
+def form8872_contributors(form8872_schedule_a_landing):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributors.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_contributors',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
 
-    return {'table_name': 'organization_aggregated_contributions_expenditures',
-            'sql_query': f"create table organization_aggregated_contributions_expenditures as {sql}",
-            'drop_table': True}
 
-    # import base64
-    # from io import BytesIO
-    #
-    # import matplotlib.pyplot as plt
-    #
-    # db = sqlite3.connect("/Users/isaacflath/github/codenym/DataPipelines/sqlite_527.db")
-    # cursor = db.cursor()
-    # cursor.execute(f"drop table if exists organization_aggregated_contributions_expenditures;")
-    # cursor.execute(f"create table organization_aggregated_contributions_expenditures as {sql};")
-    # db.commit()
-    #
-    # df = pd.read_sql(
-    #     f"select * from organization_aggregated_contributions_expenditures order by total_contributions desc limit 10",
-    #     db)
-    # context.add_output_metadata({'Top orgs by contributions': MetadataValue.md(df.to_markdown())})
-    # df[['org_name', 'total_expenditures']].plot.bar(x='org_name', y='total_expenditures')
-    # buffer = BytesIO()
-    # plt.savefig(buffer, format="png")
-    # image_data = base64.b64encode(buffer.getvalue())
-    #
-    # md_content = f"![img](data:image/png;base64,{image_data.decode()})"
-    # context.add_output_metadata({'Top orgs by contributions chart': MetadataValue.md(md_content)})
-    #
-    # df = pd.read_sql(
-    #     f"select * from organization_aggregated_contributions_expenditures order by total_expenditures desc limit 10",
-    #     db)
-    # context.add_output_metadata({'Top orgs by expenditures': MetadataValue.md(df.to_markdown())})
-    #
-    # db.close()
+@asset(io_manager_key="sqlite_manager")
+def form8872_contributions(form8872_schedule_a_landing, form8872_contributors):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributions.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_contributions',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8872_recipients(form8872_schedule_b_landing):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_recipients.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_recipients',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8872_expenditures(form8872_schedule_b_landing, form8872_recipients):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_expenditures.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_expenditures',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8872(form8872_landing, addresses):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def addresses(form8871_landing, form8871_directors_landing, form8871_related_entities_landing, form8872_landing):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/addresses.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'addresses',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8871(form8871_landing, addresses):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8871_ein(form8871_ein_landing):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_ein.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871_ein',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8871_directors(form8871_directors_landing, addresses):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_directors.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871_directors',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+
+@asset(io_manager_key="sqlite_manager")
+def form8871_related_entities(form8871_related_entities_landing, addresses):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_related_entities.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871_related_entities',
+            'sql_query': sql_query,
+            'sql_file': sql_file}
+
+#
+# @asset(io_manager_key="sqlite_manager")
+# def landing_cleanup(form8871, form8871_ein, form8871_directors,
+#                     form8871_related_entities, form8872, form8872_contributions,
+#                     form8872_expenditures):
+#     sql_file = Path("datanym/assets/IRS527/sql_scripts/landing_cleanup.sql")
+#     sql_query = load_fill_sql_file(sql_file=sql_file)
+#     return {'sql_query': sql_query,
+#             'sql_file': sql_file}
+
+# @asset(io_manager_key="sqlite_manager")
+# def organization_aggregated_contributions_expenditures(form8872_schedule_a_landing, form8872_schedule_b_landing):
+#     """
+#     Creates analytics table for top organizations by contributions and expenditures
+#     """
+#
+#     sql = f'''
+#     with total_contributions as (
+#         select org_name, sum(contribution_amount) as total_contributions
+#         from {form8872_schedule_a_landing['table_name']}
+#         group by org_name
+#     ), total_expenditures as (
+#         select org_name, sum(expenditure_amount) as total_expenditures
+#         from {form8872_schedule_b_landing['table_name']}
+#         group by org_name
+#     )
+#     select
+#         org_name,
+#         total_contributions,
+#         total_expenditures
+#     from total_contributions
+#     full outer join total_expenditures USING (org_name)
+#     ORDER BY total_contributions DESC
+#     '''
+#
+#     return {'table_name': 'organization_aggregated_contributions_expenditures',
+#             'sql_query': f"create table organization_aggregated_contributions_expenditures as {sql}",
+#             'drop_table': True}

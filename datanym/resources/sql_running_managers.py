@@ -28,16 +28,17 @@ class SqlIOManagerBase(IOManager):
                 if sql_query.strip() == '': continue
                 self._run_query(sql_query)
 
-            table_sample = pd.read_sql( f'''select * from {obj["table_name"]} limit 10;''', conn).to_markdown()
+            if 'table_name' in obj:
+                table_sample = pd.read_sql( f'''select * from {obj["table_name"]} limit 10;''', conn).to_markdown()
+                metadata.update({'table_name': MetadataValue.text(obj['table_name']),
+                                 'table_sample': MetadataValue.md(table_sample)})
         if 'sql_file' in obj:
             metadata.update({'sql_file': MetadataValue.path(obj['sql_file'])})
 
         metadata.update({'db_type': MetadataValue.text(self.db_type),
                          'db_host': MetadataValue.text(self.db_host),
-                         'table_name': MetadataValue.text(obj['table_name']),
                          'context_name': MetadataValue.text(self._get_table_name(context)),
-                         'table_sample': MetadataValue.md(table_sample),
-                         'sql_query': MetadataValue.md(f"```sql\n{obj['sql_query']}\n```")
+                         'sql_query': MetadataValue.md(f"```sql\n{obj['sql_query']}\n```"),
                          })
         context.add_output_metadata(metadata)
 
