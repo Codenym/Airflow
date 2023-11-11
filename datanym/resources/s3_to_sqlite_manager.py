@@ -57,6 +57,7 @@ class S3CSVtoSqliteIOManager(S3CSVtoSqlIOManagerBase):
             conn.close()
 
     def _move_to_sql(self, context: OutputContext, obj: str):
-        df = pd.read_csv(obj, storage_options=dict(profile=self.profile_name))
+        df = pd.read_csv(obj, storage_options=dict(profile=self.profile_name), dtype=str)
         with self._connection_context() as conn:
-            df.to_sql(self._get_table_name(context), conn, if_exists='replace', index=False)
+            df.to_sql(self._get_table_name(context), conn, if_exists='replace', index=False,
+                      dtype={col: 'TEXT' for col in df.columns})

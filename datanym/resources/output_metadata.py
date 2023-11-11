@@ -4,7 +4,7 @@ from typing import Union
 from pathlib import Path
 
 
-def add_metadata(context, metadata, add_context_to_keys=True) -> None:
+def add_metadata(context, metadata, add_context_to_keys=False) -> None:
     if isinstance(context, OutputContext):
         if add_context_to_keys: metadata = {f"out|{k}": v for k, v in metadata.items()}
         context.add_output_metadata(metadata=metadata)
