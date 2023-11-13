@@ -13,6 +13,12 @@ import pandas as pd
 from typing import Dict, List
 import json
 
+
+from dagster import (asset,
+                     AssetOut,
+                     multi_asset,
+                     get_dagster_logger,
+                     )
 import votes
 
 
@@ -27,40 +33,66 @@ def bulk_download() -> None:
         votes.run(opts)
 
 
-@asset
+@multi_asset(
+        out = {
+            "votes_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+            "reps_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+            "vote_transaction_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        })
 def parse_votes() -> Dict[str, List[Dict]]:
     """
     Parses the votes from the bulk download.
+
+    Creates three lists:
+    - reps: list of representatives
+    - votes: list of votes
+    - vote_transaction: list of how each representative voted
+
     """
-votes = defaultdict(list)
-bills = []
-votes = []
-no_bill = []
-vote_transaction = []
-count = 0
-vote_keys = [ 'category','chamber','congress','date','number','question','requires','result','result_text','session','source_url','subject','type','updated_at','vote_id']
-for file in Path("data").glob("**/*.json"):
-    with open(file) as f:
-        data = json.load(f)
-
-    try:
-        bill = data['bill']
-        bill['vote_id']=data['vote_id']
-        bills.append(bill)
-    except: 
-        no_bill.append(data)
-
-    vote = {}
-    for key in vote_keys:
-        vote[key]=data.get(key, None)
-    votes.append(vote)
-
+    votes = []
+    vote_transaction = []
     reps = []
-    reps=[(vote,key) for key in data["votes"].keys() for vote in data["votes"][key]]
-    for (vote,key) in reps:
-        vote['key'] = key
-        vote['vote_id'] = data['vote_id']
-        vote_transaction.append(vote)
-    
+    vote_cat = defaultdict(list)
+    vote_keys = [ 
+        'bill_number','bill_type',
+        'amendment_author','amendment_number','amendment_type',
+        'category','chamber','congress','date','number','question','requires','result','result_text',
+        'session','source_url','subject','type','updated_at','vote_id']
+    for file in Path("data").glob("**/*.json"):
+        with open(file) as f:
+            data = json.load(f)
 
-    return votes
+        try:
+            data['bill_number'] = data['bill']['number']
+            data['bill_type'] = data['bill']['type']
+        except: 
+            data['bill_number'] = None
+            data['bill_type'] = None
+
+        try:
+            data['amendment_author'] = data['amendment']['author']
+            data['amendment_number'] = data['amendment']['number']
+            data['amendment_type'] = data['amendment']['type']
+            
+        except:
+            data['amendment_author'] = None
+            data['amendment_number'] = None
+            data['amendment_type'] = None 
+        
+        vote_cat[data['category']].append(data)
+        vote = {}
+        for key in vote_keys:
+            vote[key]=data.get(key, None)
+        votes.append(vote)
+
+        rs=[(vote,key) for key in data["votes"].keys() for vote in data["votes"][key]]
+        vote = {}
+        for (v,key) in rs:
+            vote['voter_id'] = v['id']
+            vote['vote'] = key
+            vote['vote_id'] = data['vote_id']
+            vote_transaction.append(vote)
+
+        rep=[vote for key in data["votes"].keys() for vote in data["votes"][key]]
+        reps = reps + rep
+    return (votes, reps, vote_transaction)
