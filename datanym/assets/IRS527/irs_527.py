@@ -123,15 +123,14 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                 elif row[0] == 'F': process_row(previous_row, data_dictionary, records)
                 else:
                     previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
-                if i % 1000000 == 0:
-                    logger.info(f"Processed {i / 1000000}M rows processed so far.")
+                if i % 500000 == 0:
+                    logger.info(f"Processed {i / 500000}M rows processed so far.")
                     if i > 0: break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
-
 
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_ein_landing(form8871_ein_staging):
