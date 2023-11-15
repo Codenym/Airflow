@@ -64,7 +64,7 @@ def data_dictionary() -> dict:
 
 def process_row(row: list, mappings: dict, records: dict) -> None:
     if row[0] == 'H': return
-    null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A',]
+    null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A', ]
     mapping = mappings[row[0]]
     parsed_row = {}
     for i, cell in enumerate(row):
@@ -132,6 +132,7 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
+
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_ein_landing(form8871_ein_staging):
     """
@@ -188,17 +189,40 @@ def form8872_schedule_b_landing(form8872_schedule_b_staging):
     return form8872_schedule_b_staging
 
 
-def load_fill_sql_file(sql_file: Path):
+def load_fill_sql_file(sql_file: Path, table_names: dict = None):
     with open(sql_file, 'r') as f: sql_query = f.read()
+
     return sql_query
+
+
+from functools import partial
+
+
+def format_qry_mapper(table_names):
+    def __inner__(qry, table_names):
+        # print(f'{table_names=}')
+        # print(f'Before: {qry}')
+        qry = qry.format(**table_names)
+        # print(f"After: {qry}")
+        return qry
+
+    return partial(__inner__, table_names=table_names)
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8872_contributors(form8872_schedule_a_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributors.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8872_contributors',
-            'sql_query': sql_query,
+    from .sql_scripts.form8872_contributors import drop_8872_contributors, ddl_8872_contributors, data_8872_contributors
+    table_name = 'form8872_contributors'
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributors.py")
+
+    table_names = {'form8872_schedule_a_landing': form8872_schedule_a_landing['table_name'],
+                   'form8872_contributors': table_name
+                   }
+
+    queries = tuple(map(format_qry_mapper(table_names), [drop_8872_contributors, ddl_8872_contributors, data_8872_contributors]))
+
+    return {'table_name': table_name,
+            'sql_query': queries,
             'sql_file': sql_file}
 
 
@@ -283,11 +307,11 @@ def form8871_related_entities(form8871_related_entities_landing, addresses):
             'sql_file': sql_file}
 
 
-# @asset(io_manager_key="sqlite_manager")
-# def landing_cleanup(form8871, form8871_ein, form8871_directors,
-#                     form8871_related_entities, form8872, form8872_contributions,
-#                     form8872_expenditures):
-#     sql_file = Path("datanym/assets/IRS527/sql_scripts/landing_cleanup.sql")
-#     sql_query = load_fill_sql_file(sql_file=sql_file)
-#     return {'sql_query': sql_query,
-#             'sql_file': sql_file}
+@asset(io_manager_key="sqlite_manager")
+def landing_cleanup(form8871, form8871_ein, form8871_directors,
+                    form8871_related_entities, form8872, form8872_contributions,
+                    form8872_expenditures):
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/landing_cleanup.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'sql_query': sql_query,
+            'sql_file': sql_file}
