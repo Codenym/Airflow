@@ -19,27 +19,30 @@ from dagster import (asset,
                      multi_asset,
                      get_dagster_logger,
                      )
-import votes
+from . import votes
 
 
-@asset
-def bulk_download() -> None:
+@asset(io_manager_key="local_io_manager")
+def bulk_download() -> Path:
     """
     Downloads the list of votes using 
     https://github.com/unitedstates/congress/wiki/votes
     """
-    for congress in [110, 111, 112, 113, 114, 115, 116, 117, 118]:
+
+    base_dir = Path("data")
+    for congress in [118]:#[110, 111, 112, 113, 114, 115, 116, 117, 118]:
         opts = {"congress": congress, "chamber": "house"}
         votes.run(opts)
+    return base_dir
 
 
 @multi_asset(
-        out = {
+        outs = {
             "votes_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
             "reps_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
             "vote_transaction_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
         })
-def parse_votes() -> Dict[str, List[Dict]]:
+def parse_votes(bulk_download) -> tuple[List[Dict], List[Dict], List[Dict]]:
     """
     Parses the votes from the bulk download.
 
@@ -95,4 +98,4 @@ def parse_votes() -> Dict[str, List[Dict]]:
 
         rep=[vote for key in data["votes"].keys() for vote in data["votes"][key]]
         reps = reps + rep
-    return (votes, reps, vote_transaction)
+    return tuple(votes, reps, vote_transaction)
