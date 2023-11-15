@@ -1,5 +1,5 @@
 drop_contributions = 'drop table if exists {form8872_contributions};'
-ddl__contributions = '''
+ddl_contributions = '''
 CREATE TABLE {form8872_contributions}
     (
         contribution_id      text primary key,
@@ -44,4 +44,4 @@ from
                       (occupation is null and contributor_occupation is null))
 ;
 '''
-dagster_run_queries = [drop_contributions, ddl__contributions, data_contributions]
+dagster_run_queries = [drop_contributions, ddl_contributions, data_contributions]
