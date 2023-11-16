@@ -13,6 +13,7 @@ import pandas as pd
 from typing import Dict, List
 import json
 
+from copy import deepcopy
 
 from dagster import (asset,
                      AssetOut,
@@ -52,6 +53,7 @@ def parse_votes(bulk_download) -> tuple[List[Dict], List[Dict], List[Dict]]:
     - vote_transaction: list of how each representative voted
 
     """
+    logger = get_dagster_logger()
     votes = []
     vote_transaction = []
     reps = []
@@ -94,8 +96,32 @@ def parse_votes(bulk_download) -> tuple[List[Dict], List[Dict], List[Dict]]:
             vote['voter_id'] = v['id']
             vote['vote'] = key
             vote['vote_id'] = data['vote_id']
-            vote_transaction.append(vote)
+            vote_transaction.append(deepcopy(vote))
 
         rep=[vote for key in data["votes"].keys() for vote in data["votes"][key]]
         reps = reps + rep
-    return tuple(votes, reps, vote_transaction)
+    return tuple([votes, reps, vote_transaction])
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def reps_staging_sql(reps_staging):
+    """
+    Loads data from s3 into sql
+    """
+    return reps_staging
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def votes_staging_sql(votes_staging):
+    """
+    Loads data from s3 into sql
+    """
+    return votes_staging
+
+
+@asset(io_manager_key='s3_to_sqlite_manager')
+def vote_transaction_staging_sql(vote_transaction_staging):
+    """
+    Loads data from s3 into sql
+    """
+    return vote_transaction_staging
