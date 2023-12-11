@@ -1,5 +1,6 @@
-drop table if exists form8872_contributors;
-create table form8872_contributors
+drop_8872_contributors = "drop table if exists {form8872_contributors}"
+ddl_8872_contributors = '''
+create table {form8872_contributors}
     (
         contributor_id   integer primary key autoincrement,
         name             text,
@@ -12,9 +13,11 @@ create table form8872_contributors
         employer         text,
         occupation       text
     );
+'''
 
+data_8872_contributors = '''
 insert into
-    form8872_contributors
+    {form8872_contributors}
 (name, address_1, address_2, address_city, address_state, address_zip_code, address_zip_ext,
  employer, occupation)
     select distinct
@@ -28,5 +31,8 @@ insert into
          upper(contributor_employer)         as employer,
          upper(contributor_occupation)       as occupation
      from
-        form8872_schedule_a_landing
+        {form8872_schedule_a_landing}
 ;
+'''
+
+dagster_run_queries = [drop_8872_contributors, ddl_8872_contributors, data_8872_contributors]
