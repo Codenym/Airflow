@@ -1,0 +1,15 @@
+[32m2023-12-17 07:55:10 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - LOGS_CAPTURED - Started capturing logs in process (pid: 86296).
+[32m2023-12-17 07:55:10 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - STEP_START - Started execution of step "house_terms_staging_sql".
+[32m2023-12-17 07:55:10 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - LOADED_INPUT - Loaded input "terms_staging" using input manager "local_to_s3_io_manager", from output "terms_staging" of step "parse_reps"
+[32m2023-12-17 07:55:10 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - STEP_INPUT - Got input "terms_staging" of type "Any". (Type check passed).
+[32m2023-12-17 07:55:10 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+/Users/felix/Projects/codenym/DataPipelines/.venv/lib/python3.11/site-packages/fsspec/registry.py:272: UserWarning: Your installed version of s3fs is very old and known to cause
+severe performance issues, see also https://github.com/dask/dask/issues/10276
+
+To fix, you should specify a lower version bound on s3fs, or
+update the current installation.
+
+  warnings.warn(s3_msg)
+[32m2023-12-17 07:55:12 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - ASSET_MATERIALIZATION - Materialized value house_terms_staging_sql.
+[32m2023-12-17 07:55:12 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - HANDLED_OUTPUT - Handled output "result" using IO manager "s3_to_sqlite_manager"
+[32m2023-12-17 07:55:12 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86296 - house_terms_staging_sql - STEP_SUCCESS - Finished execution of step "house_terms_staging_sql" in 1.3s.

@@ -1,0 +1,15 @@
+[32m2023-12-17 07:40:49 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - LOGS_CAPTURED - Started capturing logs in process (pid: 85268).
+[32m2023-12-17 07:40:49 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - STEP_START - Started execution of step "house_terms_staging_sql".
+[32m2023-12-17 07:40:49 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - LOADED_INPUT - Loaded input "terms_staging" using input manager "local_to_s3_io_manager"
+[32m2023-12-17 07:40:49 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - STEP_INPUT - Got input "terms_staging" of type "Any". (Type check passed).
+[32m2023-12-17 07:40:49 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+/Users/felix/Projects/codenym/DataPipelines/.venv/lib/python3.11/site-packages/fsspec/registry.py:272: UserWarning: Your installed version of s3fs is very old and known to cause
+severe performance issues, see also https://github.com/dask/dask/issues/10276
+
+To fix, you should specify a lower version bound on s3fs, or
+update the current installation.
+
+  warnings.warn(s3_msg)
+[32m2023-12-17 07:40:50 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - ASSET_MATERIALIZATION - Materialized value house_terms_staging_sql.
+[32m2023-12-17 07:40:50 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - HANDLED_OUTPUT - Handled output "result" using IO manager "s3_to_sqlite_manager"
+[32m2023-12-17 07:40:50 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 06aeb543-0c15-49a8-8d9b-7f8678d227a9 - 85268 - house_terms_staging_sql - STEP_SUCCESS - Finished execution of step "house_terms_staging_sql" in 1.54s.

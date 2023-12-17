@@ -1,0 +1,12 @@
+[32m2023-12-17 07:54:56 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86220 - LOGS_CAPTURED - Started capturing logs in process (pid: 86220).
+[32m2023-12-17 07:54:56 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86220 - bulk_download - STEP_START - Started execution of step "bulk_download".
+WARNING:root:Going to fetch 658 votes from congress/session (118, '2023')
+WARNING:root:Unhandled vote question: On Closing Portions of the Conference
+WARNING:root:
+Errors for 0.
+WARNING:root:Skipped 0.
+WARNING:root:Saved data for 658.
+[32m2023-12-17 07:55:26 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86220 - bulk_download - STEP_OUTPUT - Yielded output "result" of type "Path". (Type check passed).
+[32m2023-12-17 07:55:26 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86220 - bulk_download - ASSET_MATERIALIZATION - Materialized value bulk_download.
+[32m2023-12-17 07:55:26 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86220 - bulk_download - HANDLED_OUTPUT - Handled output "result" using IO manager "local_io_manager"
+[32m2023-12-17 07:55:26 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 1e009691-5972-4747-8470-8efdc1beed33 - 86220 - bulk_download - STEP_SUCCESS - Finished execution of step "bulk_download" in 29.64s.

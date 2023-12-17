@@ -12,6 +12,15 @@ from pathlib import Path
 base_local_output_path = Path("output_data")
 s3_bucket = 'datanym-pipeline'
 
+
+# defs = Definitions(
+#     assets=all_assets,
+#     resources={
+#         'github_to_local_io_manager': git_manager
+#     }
+# )
+
+
 defs = Definitions(
     assets=load_assets_from_modules([irs_527,house_votes]),
     resources={

@@ -1,9 +1,19 @@
-# from dagster import Definitions, load_assets_from_modules
-#
-# from . import irs_527
-#
-# all_assets = load_assets_from_modules([irs_527])
-#
+# from dagster import (
+#     AssetSelection,
+#     Definitions,
+#     ScheduleDefinition,
+#     define_asset_job,
+#     load_assets_from_modules,
+# )
+# from pathlib import Path
+
+# git_manager = GithubToLocalIOManager(
+#     local_directory_path=Path("data/congress-legislators"), 
+#     git_url="https://github.com/unitedstates/congress-legislators")
+
 # defs = Definitions(
 #     assets=all_assets,
+#     resources={
+#         'github_to_local_io_manager': git_manager
+#     }
 # )

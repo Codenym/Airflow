@@ -11,8 +11,8 @@ setup(
         "openpyxl",
         "pandas",
         "psycopg2-binary",
-        "s3fs"
-
+        "s3fs",
+        "GitPython"
     ],
     extras_require={"dev": ["dagster-webserver", "pytest"]},
 )

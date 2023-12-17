@@ -1,0 +1,7 @@
+[32m2023-12-16 07:54:06 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - 68649 - LOGS_CAPTURED - Started capturing logs in process (pid: 68649).
+[32m2023-12-16 07:54:06 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - 68649 - house_reps_download - STEP_START - Started execution of step "house_reps_download".
+[32m2023-12-16 07:54:07 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - 68649 - house_reps_download - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+[32m2023-12-16 07:54:07 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - house_reps_download - Writing file at: /Users/felix/Projects/codenym/DataPipelines/tmp5hel9t2j/storage/house_reps_download using PickledObjectFilesystemIOManager...
+[32m2023-12-16 07:54:07 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - 68649 - house_reps_download - ASSET_MATERIALIZATION - Materialized value house_reps_download.
+[32m2023-12-16 07:54:07 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - 68649 - house_reps_download - HANDLED_OUTPUT - Handled output "result" using IO manager "io_manager"
+[32m2023-12-16 07:54:07 -0500[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - c7b185fd-5d0a-48c9-af75-fa9e368506a4 - 68649 - house_reps_download - STEP_SUCCESS - Finished execution of step "house_reps_download" in 871ms.
