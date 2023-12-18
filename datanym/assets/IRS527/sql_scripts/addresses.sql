@@ -1,6 +1,5 @@
-drop_addresses = "drop table if exists {addresses};"
-ddl_addresses = '''
-create table {addresses}
+drop table if exists addresses;
+create table addresses
     (
         address_id integer primary key autoincrement,
         address_1  text,
@@ -11,10 +10,8 @@ create table {addresses}
         zip_ext    text
     )
 ;
-'''
-data_addresses = '''
 insert into
-    {addresses} (address_1, address_2, city, state, zip_code, zip_ext)
+    addresses (address_1, address_2, city, state, zip_code, zip_ext)
 
 select distinct *
 from
@@ -26,7 +23,7 @@ from
          mailing_address_zip_code as zip_code,
          mailing_address_zip_ext  as zip_ext
      from
-         {form8871_landing}
+         form8871_landing
      union all
      select
          custodian_address_1        as address_1,
@@ -36,7 +33,7 @@ from
          custodian_address_zip_code as zip_code,
          custodian_address_zip_ext  as zip_ext
      from
-         {form8871_landing}
+         form8871_landing
      union all
      select
          contact_address_1        as address_1,
@@ -46,7 +43,7 @@ from
          contact_address_zip_code as zip_code,
          contact_address_zip_ext  as zip_ext
      from
-         {form8871_landing}
+         form8871_landing
      union all
      select
          business_address_1        as address_1,
@@ -56,7 +53,7 @@ from
          business_address_zip_code as zip_code,
          business_address_zip_ext  as zip_ext
      from
-         {form8871_landing}
+         form8871_landing
      union all
      select
          entity_address_1            as address_1,
@@ -66,7 +63,7 @@ from
          entity_address_zip_code     as zip_code,
          entity_address_zip_code_ext as zip_ext
      from
-         {form8871_directors_landing}
+         form8871_directors_landing
      union all
      select
          entity_address_1        as address_1,
@@ -76,7 +73,7 @@ from
          entity_address_zip_code as zip_code,
          entity_address_zip_ext  as zip_ext
      from
-         {form8871_related_entities_landing}
+         form8871_related_entities_landing
      union all
      select
          mailing_address_1        as address_1,
@@ -86,7 +83,7 @@ from
          mailing_address_zip_code as zip_code,
          mailing_address_zip_ext  as zip_ext
      from
-         {form8872_landing}
+         form8872_landing
      union all
      select
          contact_address_1       as address_1,
@@ -96,7 +93,7 @@ from
          contact_address_zip_code as zip_code,
          contact_address_zip_ext  as zip_ext
      from
-         {form8872_landing}
+         form8872_landing
      union all
      select
          business_address_1      as address_1,
@@ -106,7 +103,7 @@ from
          business_address_zip_code as zip_code,
          business_address_zip_ext  as zip_ext
      from
-         {form8872_landing}
+         form8872_landing
      union all
      select
          custodian_address_1     as address_1,
@@ -116,8 +113,5 @@ from
          custodian_address_zip_code as zip_code,
          custodian_address_zip_ext  as zip_ext
      from
-         {form8872_landing}
+         form8872_landing
 );
-'''
-
-dagster_run_queries = [drop_addresses, ddl_addresses, data_addresses]

@@ -14,15 +14,6 @@ from dagster import (asset,
                      multi_asset,
                      get_dagster_logger,
                      )
-import importlib
-from functools import partial
-
-
-def format_qry_mapper(table_names):
-    def __inner__(qry, table_names):
-        return qry.format(**table_names)
-
-    return partial(__inner__, table_names=table_names)
 
 
 @asset(io_manager_key="local_io_manager")
@@ -73,7 +64,7 @@ def data_dictionary() -> dict:
 
 def process_row(row: list, mappings: dict, records: dict) -> None:
     if row[0] == 'H': return
-    null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A', ]
+    null_terms = ['N/A', 'NOT APPLICABLE', 'NA', 'NONE', 'NOT APPLICABE', 'NOT APLICABLE', 'N A', 'N-A',]
     mapping = mappings[row[0]]
     parsed_row = {}
     for i, cell in enumerate(row):
@@ -141,7 +132,6 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
 
     return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
-
 @asset(io_manager_key='s3_to_sqlite_manager')
 def form8871_ein_landing(form8871_ein_staging):
     """
@@ -198,184 +188,106 @@ def form8872_schedule_b_landing(form8872_schedule_b_staging):
     return form8872_schedule_b_staging
 
 
-
+def load_fill_sql_file(sql_file: Path):
+    with open(sql_file, 'r') as f: sql_query = f.read()
+    return sql_query
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8872_contributors(form8872_schedule_a_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributors.py")
-
-    table_name = 'form8872_contributors'
-    table_names = {'form8872_schedule_a_landing': form8872_schedule_a_landing['table_name'],
-                   'form8872_contributors': table_name
-                   }
-
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributors.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_contributors',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8872_contributions(form8872_schedule_a_landing, form8872_contributors):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributions.py")
-    table_name = 'form8872_contributions'
-    table_names = {'form8872_contributions': table_name,
-                   'form8872_schedule_a_landing': form8872_schedule_a_landing['table_name'],
-                   'form8872_contributors': form8872_contributors['table_name']
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributions.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_contributions',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8872_recipients(form8872_schedule_b_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_recipients.py")
-
-    table_name = 'form8872_recipients'
-    table_names = {'form8872_recipients': table_name,
-                   'form8872_schedule_b_landing': form8872_schedule_b_landing['table_name'],
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_recipients.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_recipients',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8872_expenditures(form8872_schedule_b_landing, form8872_recipients):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_expenditures.py")
-
-    table_name = 'form8872_expenditures'
-    table_names = {'form8872_expenditures': table_name,
-                   'form8872_schedule_b_landing': form8872_schedule_b_landing['table_name'],
-                   'form8872_recipients': form8872_recipients['table_name']
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_expenditures.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872_expenditures',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8872(form8872_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872.py")
-
-    table_name = 'form8872'
-    table_names = {'form8872_landing': form8872_landing['table_name'],
-                   'addresses': addresses['table_name'],
-                   'form8872': table_name
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8872',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def addresses(form8871_landing, form8871_directors_landing, form8871_related_entities_landing, form8872_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/addresses.py")
-    table_name = 'addresses'
-
-    table_names = {'form8871_landing': form8871_landing['table_name'],
-                   'form8871_directors_landing': form8871_directors_landing['table_name'],
-                   'form8871_related_entities_landing': form8871_related_entities_landing['table_name'],
-                   'form8872_landing': form8872_landing['table_name'],
-                   'addresses': table_name
-                   }
-
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/addresses.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'addresses',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8871(form8871_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871.py")
-    table_name = 'form8871'
-    table_names = {'form8871_landing': form8871_landing['table_name'],
-                   'addresses': addresses['table_name'],
-                   'form8871': table_name
-                   }
-
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8871_ein(form8871_ein_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_ein.py")
-
-    table_name = 'form8871_ein'
-    table_names = {'form8871_ein_landing': form8871_ein_landing['table_name'],
-                   'form8871_ein': table_name
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_ein.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871_ein',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8871_directors(form8871_directors_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_directors.py")
-
-    table_name = 'form8871_directors'
-    table_names = {'form8871_directors_landing': form8871_directors_landing['table_name'],
-                   'addresses': addresses['table_name'],
-                   'form8871_directors': table_name
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_directors.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871_directors',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
 @asset(io_manager_key="sqlite_manager")
 def form8871_related_entities(form8871_related_entities_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_related_entities.py")
-
-    table_name = 'form8871_related_entities'
-    table_names = {'form8871_related_entities_landing': form8871_related_entities_landing['table_name'],
-                   'addresses': addresses['table_name'],
-                   'form8871_related_entities': table_name
-                   }
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'table_name': table_name,
-            'sql_queries': queries,
+    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_related_entities.sql")
+    sql_query = load_fill_sql_file(sql_file=sql_file)
+    return {'table_name': 'form8871_related_entities',
+            'sql_query': sql_query,
             'sql_file': sql_file}
 
 
-@asset(io_manager_key="sqlite_manager")
-def landing_cleanup(form8871, form8871_ein, form8871_directors,
-                    form8871_related_entities, form8872, form8872_contributions,
-                    form8872_expenditures):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/landing_cleanup.py")
-    table_names = {'form8871': form8871['table_name'],
-                   'form8871_ein': form8871_ein['table_name'],
-                   'form8871_directors': form8871_directors['table_name'],
-                   'form8871_related_entities': form8871_related_entities['table_name'],
-                   'form8872': form8872['table_name'],
-                   'form8872_contributions': form8872_contributions['table_name'],
-                   'form8872_expenditures': form8872_expenditures['table_name']}
-    dagster_run_queries = importlib.import_module(f'.{sql_file.stem}', package='datanym.assets.IRS527.sql_scripts').dagster_run_queries
-    queries = tuple(map(format_qry_mapper(table_names), dagster_run_queries))
-    return {'sql_queries': queries,
-            'sql_file': sql_file}
+# @asset(io_manager_key="sqlite_manager")
+# def landing_cleanup(form8871, form8871_ein, form8871_directors,
+#                     form8871_related_entities, form8872, form8872_contributions,
+#                     form8872_expenditures):
+#     sql_file = Path("datanym/assets/IRS527/sql_scripts/landing_cleanup.sql")
+#     sql_query = load_fill_sql_file(sql_file=sql_file)
+#     return {'sql_query': sql_query,
+#             'sql_file': sql_file}

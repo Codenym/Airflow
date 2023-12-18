@@ -12,7 +12,11 @@ setup(
         "pandas",
         "psycopg2-binary",
         "s3fs",
-        "GitPython"
+        "GitPython",
+        "lxml",
+        "scrapelib",
+        "iso8601",
+
     ],
     extras_require={"dev": ["dagster-webserver", "pytest"]},
 )

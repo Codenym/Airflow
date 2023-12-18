@@ -1,21 +1,20 @@
-drop_expenditure = 'drop table if exists {form8872_expenditures};'
-ddl_expenditure = '''
-CREATE TABLE {form8872_expenditures}
+drop table if exists form8872_expenditures;
+CREATE TABLE form8872_expenditures
     (
         expenditure_id      text primary key,
         form_id_number      text,
         recipient_id        integer,
         expenditure_amount  numeric,
         expenditure_date    date,
-        expenditure_purpose text
+        expenditure_purpose text,
+        foreign key (form_id_number) references form8872 (form_id_number),
+        foreign key (recipient_id) references form8872_recipients (recipient_id)
     )
 ;
-'''
 
 
-data_expenditure = '''
 insert into
-    {form8872_expenditures} (expenditure_id, form_id_number, recipient_id, expenditure_amount, expenditure_date,
+    form8872_expenditures (expenditure_id, form_id_number, recipient_id, expenditure_amount, expenditure_date,
                            expenditure_purpose)
 select
     sched_b_id                          as expenditure_id,
@@ -25,8 +24,8 @@ select
     cast(expenditure_date as date)      as expenditure_date,
     expenditure_purpose
 from
-    {form8872_schedule_b_landing}
-        left join {form8872_recipients} r
+    form8872_schedule_b_landing
+        left join form8872_recipients r
                   on (name = upper(reciepient_name) or (name is null and reciepient_name is null)) and
                      (address_1 = upper(reciepient_address_1) or
                       (address_1 is null and reciepient_address_1 is null)) and
@@ -45,6 +44,5 @@ from
                      (occupation = upper(recipient_occupation) or
                       (occupation is null and recipient_occupation is null))
 ;
-'''
 
-dagster_run_queries = [drop_expenditure, ddl_expenditure, data_expenditure]
+-- drop table form8872_schedule_b_landing;
