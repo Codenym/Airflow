@@ -21,11 +21,11 @@ class SqlIOManagerBase(IOManager):
                 'db_host': self.db_host,
                 'context_name': self._get_table_name(context)}
 
-    def handle_output(self, context: OutputContext, obj):
+    def handle_output(self, context: OutputContext, obj: (str, str)):
         metadata = {}
         with self._connection_context() as (conn, cursor):
-            for sql_query in obj['sql_query']:
-                # print(f'After: {sql_query}')
+            for sql_query in obj['sql_query'].split(';'):
+                if sql_query.strip() == '': continue
                 self._run_query(sql_query)
 
             if 'table_name' in obj:
