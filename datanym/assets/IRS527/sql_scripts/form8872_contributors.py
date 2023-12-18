@@ -34,5 +34,3 @@ insert into
         {form8872_schedule_a_landing}
 ;
 '''
-
-dagster_run_queries = [drop_8872_contributors, ddl_8872_contributors, data_8872_contributors]

@@ -1,19 +1,18 @@
-drop_contributions = 'drop table if exists {form8872_contributions};'
-ddl__contributions = '''
-CREATE TABLE {form8872_contributions}
+drop table if exists form8872_contributions;
+CREATE TABLE form8872_contributions
     (
         contribution_id      text primary key,
         form_id_number       text,
         contributor_id       integer,
         contribution_amount  numeric,
         agg_contribution_ytd numeric,
-        contribution_date    date
+        contribution_date    date,
+        foreign key (form_id_number) references form8872 (form_id_number),
+        foreign key (contributor_id) references form8872_contributions (contributor_id)
     );
-'''
 
-data_contributions = '''
 insert into
-    {form8872_contributions} (contribution_id, form_id_number, contributor_id, contribution_amount, agg_contribution_ytd,
+    form8872_contributions (contribution_id, form_id_number, contributor_id, contribution_amount, agg_contribution_ytd,
                             contribution_date)
 select
     sched_a_id                            as contribution_id,
@@ -23,8 +22,8 @@ select
     cast(agg_contribution_ytd as numeric) as agg_contribution_ytd,
     cast(contribution_date as date)       as contribution_date
 from
-    {form8872_schedule_a_landing}
-        left join {form8872_contributors} r
+    form8872_schedule_a_landing
+        left join form8872_contributors r
                   on (name = upper(contributor_name) or (name is null and contributor_name is null)) and
                      (address_1 = upper(contributor_address_1) or
                       (address_1 is null and contributor_address_1 is null)) and
@@ -43,5 +42,6 @@ from
                      (occupation = upper(contributor_occupation) or
                       (occupation is null and contributor_occupation is null))
 ;
-'''
-dagster_run_queries = [drop_contributions, ddl__contributions, data_contributions]
+
+-- drop table form8872_schedule_a_landing;
+

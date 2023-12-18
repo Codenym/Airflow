@@ -1,6 +1,5 @@
-drop_recipients = 'drop table if exists {form8872_recipients};'
-ddl_recipients = '''
-create table {form8872_recipients}
+drop table if exists form8872_recipients;
+create table form8872_recipients
     (
         recipient_id     integer primary key autoincrement,
         name             text,
@@ -13,12 +12,10 @@ create table {form8872_recipients}
         employer         text,
         occupation       text
     );
-'''
 
 
-data_recipients = '''
 insert into
-    {form8872_recipients}
+    form8872_recipients
 (name, address_1, address_2, address_city, address_state, address_zip_code, address_zip_ext,
  employer, occupation)
 
@@ -33,6 +30,5 @@ select distinct
     upper(reciepient_employer)         as employer,
     upper(recipient_occupation)        as occupation
 from
-    {form8872_schedule_b_landing};
-'''
-dagster_run_queries = [drop_recipients, ddl_recipients, data_recipients]
+    form8872_schedule_b_landing;
+

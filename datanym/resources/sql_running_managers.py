@@ -19,14 +19,13 @@ class SqlIOManagerBase(IOManager):
     def load_input(self, context: InputContext) -> (str, str, str):
         return {'db_type': self.db_type,
                 'db_host': self.db_host,
-                'table_name': self._get_table_name(context)}
+                'context_name': self._get_table_name(context)}
 
     def handle_output(self, context: OutputContext, obj):
         metadata = {}
         with self._connection_context() as (conn, cursor):
-            if isinstance(obj['sql_queries'], str):
-                obj['sql_queries'] = [obj['sql_queries']]
-            for sql_query in obj['sql_queries']:
+            for sql_query in obj['sql_query']:
+                # print(f'After: {sql_query}')
                 self._run_query(sql_query)
 
             if 'table_name' in obj:
@@ -36,11 +35,10 @@ class SqlIOManagerBase(IOManager):
         if 'sql_file' in obj:
             metadata.update({'sql_file': MetadataValue.path(obj['sql_file'])})
 
-        sql_text = '\n\n'.join(obj['sql_queries'])
         metadata.update({'db_type': MetadataValue.text(self.db_type),
                          'db_host': MetadataValue.text(self.db_host),
                          'context_name': MetadataValue.text(self._get_table_name(context)),
-                         'sql_queries': MetadataValue.md(f"```sql\n{sql_text}\n```"),
+                         'sql_query': MetadataValue.md(f"```sql\n{obj['sql_query']}\n```"),
                          })
         context.add_output_metadata(metadata)
 
