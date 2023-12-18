@@ -12,7 +12,7 @@ import datetime
 from lxml import html, etree
 import logging
 
-from congress.tasks import vote_info
+from . import vote_info
 
 
 def run(options):
