@@ -8,6 +8,7 @@ setup(
         "credstash",
         "dagster",
         "dagster_aws",
+        "dagster-webserver",
         "openpyxl",
         "pandas",
         "psycopg2-binary",
@@ -18,5 +19,5 @@ setup(
         "iso8601",
 
     ],
-    extras_require={"dev": ["dagster-webserver", "pytest"]},
+    extras_require={"dev": ["pytest"]},
 )
