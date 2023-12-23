@@ -2,15 +2,15 @@ drop table if exists form8872_recipients;
 create table form8872_recipients
     (
         recipient_id     integer primary key identity(1,1) not null,
-        name             varchar(50),
-        address_1        varchar(50),
-        address_2        varchar(50),
-        address_city     varchar(50),
+        name             varchar(100),
+        address_1        varchar(100),
+        address_2        varchar(100),
+        address_city     varchar(100),
         address_state    varchar(2),
         address_zip_code varchar(5),
         address_zip_ext  varchar(4),
-        employer         varchar(72),
-        occupation       varchar(72)
+        employer         varchar(100),
+        occupation       varchar(100)
     );
 
 

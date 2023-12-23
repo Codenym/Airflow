@@ -3,10 +3,10 @@ create table form8871_related_entities
     (
         form_id_number      varchar(7),
         entity_id           varchar(7),
-        org_name            varchar(72),
+        org_name            varchar(100),
         ein                 varchar(9),
-        entity_name         varchar(72),
-        entity_relationship varchar(50),
+        entity_name         varchar(100),
+        entity_relationship varchar(100),
         entity_address_id   int
 --         foreign key (form_id_number) references form8871_landing (form_id_number)
 --         foreign key (entity_address_id) references form8871_addresses (address_id)

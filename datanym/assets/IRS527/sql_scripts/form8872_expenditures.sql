@@ -1,8 +1,8 @@
 drop table if exists form8872_expenditures;
 CREATE TABLE form8872_expenditures
     (
-        expenditure_id      varchar(7) primary key,
-        form_id_number      varchar(7),
+        expenditure_id      varchar(9) primary key,
+        form_id_number      varchar(9),
         recipient_id        integer,
         expenditure_amount  numeric,
         expenditure_date    date,
