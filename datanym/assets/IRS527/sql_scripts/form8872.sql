@@ -27,10 +27,8 @@ CREATE TABLE form8872
         contact_address_id          integer,
         business_address_id         integer,
         custodian_address_id        integer,
-
         insert_datetime             timestamp
     );
-
 
 insert into
     form8872
@@ -60,22 +58,22 @@ insert into
 
 select
     form_id_number,
-    period_begin_date,
-    period_end_date,
-    initial_report_indicator,
-    amended_report_indicator,
-    final_report_indicator,
-    change_of_address_indicator,
+    to_date(period_begin_date,'YYYYMMDD'),
+    to_date(period_end_date,'YYYYMMDD'),
+    initial_report_indicator=1,
+    amended_report_indicator=1,
+    final_report_indicator=1,
+    change_of_address_indicator=1,
     organization_name,
     ein,
     e_mail_address,
-    org_formation_date,
+    to_date(org_formation_date,'YYYYMMDD'),
     custodian_name,
     contact_person_name,
-    qtr_indicator,
-    monthly_rpt_month,
+    case when qtr_indicator = '' then null else qtr_indicator::int end,
+    case when monthly_rpt_month = '' then null else monthly_rpt_month::int end,
     pre_elect_type,
-    pre_or_post_elect_date,
+    to_date(pre_or_post_elect_date,'YYYYMMDD'),
     pre_or_post_elect_state,
     mail_add.address_id as mailing_address_id,
     con_add.address_id  as contact_address_id,
@@ -83,7 +81,7 @@ select
     cus_add.address_id  as custodian_address_id,
     insert_datetime
 from
-    form8872_landing
+    landing.form8872_landing
         left join addresses as mail_add on
             ((mail_add.address_1 = mailing_address_1) or (mail_add.address_1 is null and mailing_address_1 is null)) and
             ((mail_add.address_2 = mailing_address_2) or (mail_add.address_2 is null and mailing_address_2 is null)) and
@@ -124,4 +122,3 @@ from
             ((cus_add.zip_ext = custodian_address_zip_ext) or
              (cus_add.zip_ext is null and custodian_address_zip_ext is null))
 ;
--- drop table form8872_landing;

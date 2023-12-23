@@ -6,9 +6,9 @@ CREATE TABLE form8872_contributions
         contributor_id       integer,
         contribution_amount  numeric,
         agg_contribution_ytd numeric,
-        contribution_date    date,
-        foreign key (form_id_number) references form8872 (form_id_number),
-        foreign key (contributor_id) references form8872_contributions (contributor_id)
+        contribution_date    date
+--         foreign key (form_id_number) references form8872 (form_id_number),
+--         foreign key (contributor_id) references form8872_contributions (contributor_id)
     );
 
 insert into
@@ -20,9 +20,9 @@ select
     contributor_id,
     cast(contribution_amount as numeric)  as contribution_amount,
     cast(agg_contribution_ytd as numeric) as agg_contribution_ytd,
-    cast(contribution_date as date)       as contribution_date
+    to_date(contribution_date,'YYYYMMDD')       as contribution_date
 from
-    form8872_schedule_a_landing
+    landing.form8872_schedule_a_landing
         left join form8872_contributors r
                   on (name = upper(contributor_name) or (name is null and contributor_name is null)) and
                      (address_1 = upper(contributor_address_1) or
@@ -42,6 +42,4 @@ from
                      (occupation = upper(contributor_occupation) or
                       (occupation is null and contributor_occupation is null))
 ;
-
--- drop table form8872_schedule_a_landing;
 

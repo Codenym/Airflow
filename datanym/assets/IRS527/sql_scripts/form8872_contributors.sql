@@ -1,7 +1,7 @@
 drop table if exists form8872_contributors;
 create table form8872_contributors
     (
-        contributor_id   integer primary key autoincrement,
+        contributor_id   integer primary key identity(1,1) not null,
         name             text,
         address_1        text,
         address_2        text,
@@ -28,5 +28,5 @@ insert into
          upper(contributor_employer)         as employer,
          upper(contributor_occupation)       as occupation
      from
-        form8872_schedule_a_landing
+        landing.form8872_schedule_a_landing
 ;

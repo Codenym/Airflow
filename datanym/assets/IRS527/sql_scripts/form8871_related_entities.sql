@@ -7,9 +7,9 @@ create table form8871_related_entities
         ein                 TEXT,
         entity_name         TEXT,
         entity_relationship TEXT,
-        entity_address_id   TEXT,
-        foreign key (form_id_number) references form8871_landing (form_id_number),
-        foreign key (entity_address_id) references form8871_addresses (address_id)
+        entity_address_id   TEXT
+--         foreign key (form_id_number) references form8871_landing (form_id_number)
+--         foreign key (entity_address_id) references form8871_addresses (address_id)
     );
 
 insert into form8871_related_entities (form_id_number, entity_id, org_name, ein, entity_name, entity_relationship, entity_address_id)
@@ -22,7 +22,7 @@ select
     entity_relationship,
     ent_add.address_id as entity_address_id
 from
-    form8871_related_entities_landing
+    landing.form8871_related_entities_landing
         left join addresses as ent_add on
             ((ent_add.address_1 = entity_address_1) or
              (ent_add.address_1 is null and entity_address_1 is null)) and
@@ -33,5 +33,5 @@ from
              (ent_add.state is null and entity_address_st is null)) and
             ((ent_add.zip_code = entity_address_zip_code) or
              (ent_add.zip_code is null and entity_address_zip_code is null)) and
-            ((ent_add.zip_ext = entity_address_zip_ext) or
-             (ent_add.zip_ext is null and entity_address_zip_ext is null));
+            ((ent_add.zip_ext = entity_address_zip_code_ext) or
+             (ent_add.zip_ext is null and entity_address_zip_code_ext is null));

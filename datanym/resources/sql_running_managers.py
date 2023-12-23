@@ -4,7 +4,10 @@ from typing import Union
 import sqlite3
 from abc import abstractmethod
 from contextlib import contextmanager
-
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
+import credstash
+from sqlalchemy import text
 
 class SqlIOManagerBase(IOManager):
     def __init__(self, db_type: str, db_host: str):
@@ -23,10 +26,11 @@ class SqlIOManagerBase(IOManager):
 
     def handle_output(self, context: OutputContext, obj: (str, str)):
         metadata = {}
-        with self._connection_context() as (conn, cursor):
+        with self._connection_context() as conn:
             for sql_query in obj['sql_query'].split(';'):
                 if sql_query.strip() == '': continue
                 self._run_query(sql_query)
+                conn.commit()
 
             if 'table_name' in obj:
                 table_sample = pd.read_sql( f'''select * from {obj["table_name"]} limit 10;''', conn).to_markdown()
@@ -51,6 +55,37 @@ class SqlIOManagerBase(IOManager):
     def _connection_context(self):
         raise NotImplementedError
 
+
+
+class RedshiftIOManager(SqlIOManagerBase):
+    def __init__(self, db_host: str):
+        super().__init__(db_type='redshift', db_host=db_host)
+
+        redshift_password = credstash.getSecret('database.aws_redshiftserverless.password', region='us-east-1', profile_name='codenym')
+        redshift_username = credstash.getSecret('database.aws_redshiftserverless.username', region='us-east-1', profile_name='codenym')
+        redshift_port = credstash.getSecret('database.aws_redshiftserverless.port', region='us-east-1', profile_name='codenym')
+
+        self.url_object = URL.create(drivername='redshift+redshift_connector',
+                                username=redshift_username,
+                                password=redshift_password,
+                                host=self.db_host,
+                                database='dev',
+                                port=redshift_port)
+
+
+    @contextmanager
+    def _connection_context(self):
+        engine = create_engine(self.url_object, future=True)
+        try:
+            with engine.connect() as conn:
+                yield conn
+        finally:
+            pass
+
+    def _run_query(self, query: str):
+        with self._connection_context() as conn:
+            conn.execute(text(query))
+            conn.commit()
 
 class SqliteIOManager(SqlIOManagerBase):
     def __init__(self, db_host: str):

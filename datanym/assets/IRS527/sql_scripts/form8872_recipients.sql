@@ -1,7 +1,7 @@
 drop table if exists form8872_recipients;
 create table form8872_recipients
     (
-        recipient_id     integer primary key autoincrement,
+        recipient_id     integer primary key identity(1,1) not null,
         name             text,
         address_1        text,
         address_2        text,
@@ -30,5 +30,5 @@ select distinct
     upper(reciepient_employer)         as employer,
     upper(recipient_occupation)        as occupation
 from
-    form8872_schedule_b_landing;
+    landing.form8872_schedule_b_landing;
 

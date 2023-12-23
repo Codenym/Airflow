@@ -6,9 +6,9 @@ CREATE TABLE form8872_expenditures
         recipient_id        integer,
         expenditure_amount  numeric,
         expenditure_date    date,
-        expenditure_purpose text,
-        foreign key (form_id_number) references form8872 (form_id_number),
-        foreign key (recipient_id) references form8872_recipients (recipient_id)
+        expenditure_purpose varchar(2000)
+--         foreign key (form_id_number) references form8872 (form_id_number),
+--         foreign key (recipient_id) references form8872_recipients (recipient_id)
     )
 ;
 
@@ -21,10 +21,10 @@ select
     form_id_number,
     recipient_id,
     cast(expenditure_amount as numeric) as expenditure_amount,
-    cast(expenditure_date as date)      as expenditure_date,
+    to_date(expenditure_date,'YYYYMMDD')      as expenditure_date,
     expenditure_purpose
 from
-    form8872_schedule_b_landing
+    landing.form8872_schedule_b_landing
         left join form8872_recipients r
                   on (name = upper(reciepient_name) or (name is null and reciepient_name is null)) and
                      (address_1 = upper(reciepient_address_1) or
@@ -44,5 +44,3 @@ from
                      (occupation = upper(recipient_occupation) or
                       (occupation is null and recipient_occupation is null))
 ;
-
--- drop table form8872_schedule_b_landing;

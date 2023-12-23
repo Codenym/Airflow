@@ -1,32 +1,33 @@
 drop table if exists form8871;
 create table form8871
     (
-        record_type              text,
-        form_type                text,
-        form_id_number           text primary key,
-        initial_report_indicator boolean,
-        amended_report_indicator boolean,
-        final_report_indicator   boolean,
-        ein                      text,
-        organization_name        text,
-        e_mail_address           text,
-        established_date         date,
-        custodian_name           text,
-        contact_person_name      text,
-        exempt_8872_indicator    boolean,
-        exempt_state             text,
-        exempt_990_indicator     boolean,
-        purpose                  text,
-        material_change_date     date,
-        insert_datetime          timestamp,
-        related_entity_bypass    text,
-        eain_bypass              text,
-        mailing_address_id       text,
-        custodian_address_id     text,
-        contact_address_id       text,
-        business_address_id      text
+    record_type              varchar(1),
+    form_type                varchar(4),
+    form_id_number           varchar(7) primary key,
+    initial_report_indicator boolean,
+    amended_report_indicator boolean,
+    final_report_indicator   boolean,
+    ein                      varchar(9),
+    organization_name        varchar,
+    e_mail_address           varchar,
+    established_date         date,
+    custodian_name           varchar,
+    contact_person_name      varchar,
+    exempt_8872_indicator    boolean,
+    exempt_state             varchar(2),
+    exempt_990_indicator     boolean,
+    purpose                  varchar(2000),
+    material_change_date     date,
+    insert_datetime          timestamp,
+    related_entity_bypass    boolean,
+    eain_bypass              boolean,
+    mailing_address_id       varchar(6),
+    custodian_address_id     varchar(6),
+    contact_address_id       varchar(6),
+    business_address_id      varchar(6)
 
     );
+
 
 insert into
     form8871 (record_type,
@@ -57,29 +58,29 @@ select
     record_type,
     form_type,
     form_id_number,
-    initial_report_indicator,
-    amended_report_indicator,
-    final_report_indicator,
+    initial_report_indicator = 1,
+    amended_report_indicator = 1,
+    final_report_indicator = 1,
     ein,
     organization_name,
     e_mail_address,
-    established_date,
+    to_date(established_date::varchar, 'YYYYMMDD') as established_date,
     custodian_name,
     contact_person_name,
-    exempt_8872_indicator,
+    exempt_8872_indicator = 1,
     exempt_state,
-    exempt_990_indicator,
+    exempt_990_indicator = 1,
     purpose,
-    material_change_date,
+    to_date(material_change_date::varchar, 'YYYYMMDD') as material_change_date,
     insert_datetime,
-    related_entity_bypass,
-    eain_bypass,
+    related_entity_bypass = 1,
+    eain_bypass = 1,
     mail_add.address_id as mailing_address_id,
     con_add.address_id  as contact_address_id,
     bus_add.address_id  as business_address_id,
     cus_add.address_id  as custodian_address_id
 from
-    form8871_landing
+    landing.form8871_landing
         left join addresses as mail_add on
             ((mail_add.address_1 = mailing_address_1) or (mail_add.address_1 is null and mailing_address_1 is null)) and
             ((mail_add.address_2 = mailing_address_2) or (mail_add.address_2 is null and mailing_address_2 is null)) and
@@ -119,5 +120,3 @@ from
              (cus_add.zip_code is null and custodian_address_zip_code is null)) and
             ((cus_add.zip_ext = custodian_address_zip_ext) or
              (cus_add.zip_ext is null and custodian_address_zip_ext is null));
-
--- drop table form8871_landing;

@@ -8,10 +8,10 @@ create table form8871_directors
         ein               TEXT,
         entity_name       TEXT,
         entity_title      TEXT,
-        entity_address_id int,
+        entity_address_id int
 
-        foreign key (form_id_number) references form8871_landing (form_id_number),
-        foreign key (entity_address_id) references addresses (address_id)
+--         foreign key (form_id_number) references form8871_landing (form_id_number)
+--         foreign key (entity_address_id) references addresses (address_id)
 
     );
 
@@ -36,7 +36,7 @@ select
     entity_title,
     ent_add.address_id as entity_address_id
 from
-    form8871_directors_landing
+    landing.form8871_directors_landing
         left join addresses as ent_add on
             ((ent_add.address_1 = entity_address_1) or
              (ent_add.address_1 is null and entity_address_1 is null)) and

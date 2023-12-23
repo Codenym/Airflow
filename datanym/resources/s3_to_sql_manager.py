@@ -5,7 +5,10 @@ import sqlite3
 from typing import Union
 from abc import abstractmethod
 from contextlib import contextmanager
-
+import credstash
+from sqlalchemy import create_engine
+from sqlalchemy.engine import URL
+from sqlalchemy import text
 
 class S3CSVtoSqlIOManagerBase(IOManager):
     def __init__(self, db_type: str, db_host: str, profile_name: str = 'codenym'):
@@ -40,6 +43,46 @@ class S3CSVtoSqlIOManagerBase(IOManager):
     @abstractmethod
     def _move_to_sql(self, context: OutputContext, obj: str):
         raise NotImplementedError
+
+
+
+class S3CSVtoRedshiftIOManager(S3CSVtoSqlIOManagerBase):
+    def __init__(self, db_host: str, profile_name: str = 'codenym', append=False):
+        self.append=append
+        super().__init__(db_type='redshift', db_host=db_host, profile_name=profile_name)
+
+        redshift_password = credstash.getSecret('database.aws_redshiftserverless.password', region='us-east-1', profile_name=self.profile_name)
+        redshift_username = credstash.getSecret('database.aws_redshiftserverless.username', region='us-east-1', profile_name=self.profile_name)
+        redshift_port = credstash.getSecret('database.aws_redshiftserverless.port', region='us-east-1', profile_name=self.profile_name)
+
+        self.url_object = URL.create(drivername='redshift+redshift_connector',
+                                username=redshift_username,
+                                password=redshift_password,
+                                host=self.db_host,
+                                database='dev',
+                                port=redshift_port)
+
+
+    @contextmanager
+    def _connection_context(self):
+        engine = create_engine(self.url_object, future=True)
+        try:
+            with engine.connect() as conn:
+                yield conn
+        finally:
+            pass
+
+    def _move_to_sql(self, context: OutputContext, obj: str):
+        qry = f'''COPY landing.{self._get_table_name(context)}
+                 FROM '{obj}' 
+                 iam_role 'arn:aws:iam::525714925249:role/RedshiftRole' 
+                 ignoreheader 1
+                 format as CSV;'''
+        with self._connection_context() as conn:
+            if not self.append:
+                conn.execute(text(f'DELETE FROM landing.{self._get_table_name(context)} where true;'))
+            conn.execute(text(qry))
+            conn.commit()
 
 
 class S3CSVtoSqliteIOManager(S3CSVtoSqlIOManagerBase):

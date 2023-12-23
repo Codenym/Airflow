@@ -6,13 +6,13 @@ create table organization_aggregated_contributions_expenditures as
                                      org_name,
                                      sum(contribution_amount) as total_contributions
                                  from
-                                     form8872_schedule_a_landing
+                                     landing.form8872_schedule_a_landing
                                  group by org_name),
          total_expenditures as (select
                                     org_name,
                                     sum(expenditure_amount) as total_expenditures
                                 from
-                                    form8872_schedule_b_landing
+                                    landing.form8872_schedule_b_landing
                                 group by org_name)
      select
          org_name,
