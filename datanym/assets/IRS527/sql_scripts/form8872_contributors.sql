@@ -2,15 +2,15 @@ drop table if exists form8872_contributors;
 create table form8872_contributors
     (
         contributor_id   integer primary key identity(1,1) not null,
-        name             text,
-        address_1        text,
-        address_2        text,
-        address_city     text,
-        address_state    text,
-        address_zip_code text,
-        address_zip_ext  text,
-        employer         text,
-        occupation       text
+        name             varchar(50),
+        address_1        varchar(50),
+        address_2        varchar(50),
+        address_city     varchar(50),
+        address_state    varchar(2),
+        address_zip_code varchar(5),
+        address_zip_ext  varchar(4),
+        employer         varchar(72),
+        occupation       varchar(72)
     );
 
 insert into

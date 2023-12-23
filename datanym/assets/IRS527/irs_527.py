@@ -85,8 +85,29 @@ def fix_malformed_row(line: str) -> str:
         ('''|"N/A'|''', '''|"N/A"|'''),
         ('''|"522 Highland Avenue |''', '''|"522 Highland Avenue"|'''),
         ('''|"AV-TECH INDUSTRIES|''', '''|"AV-TECH INDUSTRIES"|'''),
-        ('''|"c/o Moxie Innovative|''', '''|"c/o Moxie Innovative"|''')
-    )
+        ('''|"c/o Moxie Innovative|''', '''|"c/o Moxie Innovative"|'''),
+        ('''|"423 Georgia Ave SE |''', '''|"423 Georgia Ave SE"|'''),
+        ('''|"Chris Andrews|''', '''|"Chris Andrews"|'''),
+        ('''|"Petroleum|''', '''|"Petroleum"|'''),
+        ('''|"J. Conly and Associates|''', '''|"J. Conly and Associates"|'''),
+        ('''|"Ubs Securities|''', '''|"Ubs Securities"|'''),
+        ('''|"P.O. Box 619616 |''', '''|"P.O. Box 619616"|'''),
+        ('''|"WF Enterprises|''', '''|"WF Enterprises"|'''),
+        ('''|"225 Broadway Ste 1410 New York, NY|''', '''|"225 Broadway Ste 1410 New York, NY"|'''),
+        ('''|"701 W Jackson Blvd Apt 407G Chicag|''', '''|"701 W Jackson Blvd Apt 407G Chicag"|'''),
+        ('''|"Excalibur Investment Group|''', '''|"Excalibur Investment Group"|'''),
+        ('''|"Advanced Metals Technology|''', '''|"Advanced Metals Technology"|'''),
+        ('''|"Advantage Security|''', '''|"Advantage Security"|'''),
+        ('''|"G. Brockman|''', '''|"G. Brockman"|'''),
+        ('''|"I Factor|''', '''|"I Factor"|'''),
+        ('''|"522 Highland Avenue |''', '''|"522 Highland Avenue"|'''),
+        ('''|"AV-TECH INDUSTRIES|''', '''|"AV-TECH INDUSTRIES"|'''),#
+        ('''|Yard sign, stickers and website design"|''', '''|"Yard sign, stickers and website design"|'''),
+        ('''|One Long Grove is a local political action committee which supports and opposes state, county and local political candidates and reports its business in detail to the Illinois State Board of Elections."|''', '''|"One Long Grove is a local political action committee which supports and opposes state, county and local political candidates and reports its business in detail to the Illinois State Board of Elections."|'''),
+        ('''|Inc"|''', '''|"Inc"|'''),
+        ('''|'AGGREGATE BELOW THRESHOLD"|''', '''|"AGGREGATE BELOW THRESHOLD"|'''),
+        ('''|Fulfillment/Premium items (Ronald Reagan, Rendezvous With Destiny"|''', '''|"Fulfillment/Premium items (Ronald Reagan, Rendezvous With Destiny"|'''),
+        )
 
     for m in malformed:
         line = line.replace(m[0], m[1])
@@ -126,7 +147,7 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                     previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                 if i % 500000 == 0:
                     logger.info(f"Processed {i / 500000}M rows processed so far.")
-                    if i > 0: break
+                    # if i > 0: break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e

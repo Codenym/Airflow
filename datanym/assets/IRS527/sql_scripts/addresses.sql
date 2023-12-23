@@ -1,13 +1,14 @@
+
 drop table if exists addresses;
 create table addresses
     (
         address_id integer primary key identity(1, 1) not null,
-        address_1  text,
-        address_2  text,
-        city       text,
-        state      text,
-        zip_code   text,
-        zip_ext    text
+        address_1  varchar(50),
+        address_2  varchar(50),
+        city       varchar(50),
+        state      varchar(2),
+        zip_code   varchar(5),
+        zip_ext    varchar(4)
     )
 ;
 insert into

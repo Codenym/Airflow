@@ -8,23 +8,23 @@ create table form8871
     amended_report_indicator boolean,
     final_report_indicator   boolean,
     ein                      varchar(9),
-    organization_name        varchar,
-    e_mail_address           varchar,
+    organization_name        varchar(100),
+    e_mail_address           varchar(100),
     established_date         date,
-    custodian_name           varchar,
-    contact_person_name      varchar,
+    custodian_name           varchar(50),
+    contact_person_name      varchar(50),
     exempt_8872_indicator    boolean,
     exempt_state             varchar(2),
     exempt_990_indicator     boolean,
-    purpose                  varchar(2000),
+    purpose                  varchar(1000),
     material_change_date     date,
     insert_datetime          timestamp,
     related_entity_bypass    boolean,
     eain_bypass              boolean,
-    mailing_address_id       varchar(6),
-    custodian_address_id     varchar(6),
-    contact_address_id       varchar(6),
-    business_address_id      varchar(6)
+    mailing_address_id       int,
+    custodian_address_id     int,
+    contact_address_id       int,
+    business_address_id      int
 
     );
 

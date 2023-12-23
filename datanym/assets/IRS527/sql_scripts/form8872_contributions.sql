@@ -1,8 +1,8 @@
 drop table if exists form8872_contributions;
 CREATE TABLE form8872_contributions
     (
-        contribution_id      text primary key,
-        form_id_number       text,
+        contribution_id      varchar(7) primary key,
+        form_id_number       varchar(7),
         contributor_id       integer,
         contribution_amount  numeric,
         agg_contribution_ytd numeric,

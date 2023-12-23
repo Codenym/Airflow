@@ -1,13 +1,13 @@
 drop table if exists form8871_related_entities;
 create table form8871_related_entities
     (
-        form_id_number      TEXT,
-        entity_id           TEXT,
-        org_name            TEXT,
-        ein                 TEXT,
-        entity_name         TEXT,
-        entity_relationship TEXT,
-        entity_address_id   TEXT
+        form_id_number      varchar(7),
+        entity_id           varchar(7),
+        org_name            varchar(72),
+        ein                 varchar(9),
+        entity_name         varchar(72),
+        entity_relationship varchar(50),
+        entity_address_id   int
 --         foreign key (form_id_number) references form8871_landing (form_id_number)
 --         foreign key (entity_address_id) references form8871_addresses (address_id)
     );
