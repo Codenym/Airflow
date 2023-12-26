@@ -9,6 +9,7 @@ from .resources.s3_to_sql_manager import S3CSVtoSqliteIOManager, S3CSVtoRedshift
 from .resources.sql_running_managers import SqliteIOManager, RedshiftIOManager
 from pathlib import Path
 import credstash
+from .resources.duckpond import DuckPondIOManager, DuckDB
 
 base_local_output_path = Path("output_data")
 s3_bucket = 'datanym-pipeline'
@@ -28,14 +29,17 @@ s3_bucket = 'datanym-pipeline'
 
 
 defs = Definitions(
-    assets=load_assets_from_modules([irs_527,house_votes]),
+    assets=load_assets_from_modules([irs_527, house_votes]),
     resources={
         'local_io_manager': LocalPickleIOManager(local_directory_path=Path(base_local_output_path)),
         'local_to_s3_io_manager': LocalPickleToS3CSVIOManager(
             local_directory_path=Path(base_local_output_path),
             s3_bucket=s3_bucket,
             s3_directory='data/'),
-        's3_to_rs_manager': S3CSVtoRedshiftIOManager(credstash.getSecret('database.aws_redshiftserverless.endpoint', region='us-east-1', profile_name='codenym')),
+        'DuckPondIOManager': DuckPondIOManager(bucket_name=s3_bucket, duckdb=DuckDB(), prefix='duckdb/'),
+
+        's3_to_rs_manager': S3CSVtoRedshiftIOManager(
+            credstash.getSecret('database.aws_redshiftserverless.endpoint', region='us-east-1', profile_name='codenym')),
         'rs_manager': RedshiftIOManager(credstash.getSecret('database.aws_redshiftserverless.endpoint', region='us-east-1', profile_name='codenym')),
     },
 )
