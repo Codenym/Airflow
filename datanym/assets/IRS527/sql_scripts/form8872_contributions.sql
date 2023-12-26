@@ -11,6 +11,10 @@ CREATE TABLE form8872_contributions
 --         foreign key (contributor_id) references form8872_contributions (contributor_id)
     );
 
+select max(length(sched_a_id)),
+         max(length(form_id_number))
+from     landing.form8872_schedule_a_landing
+;
 insert into
     form8872_contributions (contribution_id, form_id_number, contributor_id, contribution_amount, agg_contribution_ytd,
                             contribution_date)
@@ -18,8 +22,8 @@ select
     sched_a_id                            as contribution_id,
     form_id_number,
     contributor_id,
-    cast(contribution_amount as numeric)  as contribution_amount,
-    cast(agg_contribution_ytd as numeric) as agg_contribution_ytd,
+    cast(case when contribution_amount = '' then null else contribution_amount end as numeric)  as contribution_amount,
+    cast(case when agg_contribution_ytd = '' then null else agg_contribution_ytd end as numeric) as agg_contribution_ytd,
     to_date(contribution_date,'YYYYMMDD')       as contribution_date
 from
     landing.form8872_schedule_a_landing

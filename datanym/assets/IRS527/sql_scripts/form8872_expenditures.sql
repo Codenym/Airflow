@@ -12,7 +12,6 @@ CREATE TABLE form8872_expenditures
     )
 ;
 
-
 insert into
     form8872_expenditures (expenditure_id, form_id_number, recipient_id, expenditure_amount, expenditure_date,
                            expenditure_purpose)
@@ -20,7 +19,7 @@ select
     sched_b_id                          as expenditure_id,
     form_id_number,
     recipient_id,
-    cast(expenditure_amount as numeric) as expenditure_amount,
+    cast(case when expenditure_amount = '' then null else expenditure_amount end as numeric) as expenditure_amount,
     to_date(expenditure_date,'YYYYMMDD')      as expenditure_date,
     expenditure_purpose
 from
