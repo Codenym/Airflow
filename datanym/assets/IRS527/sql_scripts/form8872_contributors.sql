@@ -1,4 +1,5 @@
 select distinct
+    uuid()                  as contributor_id,
     upper(contributor_name)             as name,
     upper(contributor_address_1)        as address_1,
     upper(contributor_address_2)        as address_2,

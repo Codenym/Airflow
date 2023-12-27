@@ -4,7 +4,6 @@ import pandas as pd
 from sqlescapy import sqlescape
 from string import Template
 from typing import Mapping
-import credstash
 from .output_metadata import add_metadata
 
 
@@ -52,7 +51,6 @@ class DuckDB:
         db = connect(":memory:")
         db.query("install httpfs; load httpfs;")
         db.query("install aws; load aws;")
-        db.query("install aws; load aws;")
         db.query("CALL load_aws_credentials('codenym');")
 
         db.query(self.options)
@@ -89,6 +87,9 @@ class DuckPondIOManager(IOManager):
                 f"Expected asset to return a SQL; got {select_statement!r}"
             )
 
+        # table_sample = pd.read_sql(f'''select * from {obj["table_name"]} limit 10;''', conn).to_markdown()
+
+        print(sql_to_string(select_statement))
         self.duckdb.query(
             SQL(
                 sql="copy $select_statement to $url (format parquet)",
@@ -96,14 +97,13 @@ class DuckPondIOManager(IOManager):
                 url=self._get_s3_url(context)
             )
         )
-
-        # table_sample = pd.read_sql(f'''select * from {obj["table_name"]} limit 10;''', conn).to_markdown()
-
+        sample = self.duckdb.query(SQL("select * from read_parquet($url) limit 10", url=self._get_s3_url(context))).to_markdown()
         metadata = {'select_statement': MetadataValue.md(f'```sql\n{sql_to_string(select_statement)}\n```'),
-                    'url': MetadataValue.text(self._get_s3_url(context))
+                    'url': MetadataValue.text(self._get_s3_url(context)),
+                    'sample': MetadataValue.md(sample)
                     }
-
         add_metadata(context, metadata)
+
 
 
     def load_input(self, context) -> SQL:
