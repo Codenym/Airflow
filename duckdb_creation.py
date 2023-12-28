@@ -4,7 +4,7 @@ import boto3
 schemas = ['landing', 'staging', 'curated', 'analytics']
 s3_bucket = 'datanym-pipeline'
 s3_prefix = 'duckdb/'
-aws_profile = 'codenym'
+aws_profile = ''
 
 def create_view_query(key):
     file_name = key.split('/')[1].split('.')[0]
@@ -18,7 +18,13 @@ if __name__ == '__main__':
     with duckdb.connect("database.duckdb") as con:
         con.query("install httpfs; load httpfs;")
         con.query("install aws; load aws;")
-        con.query(f"CALL load_aws_credentials('{aws_profile}');")
+        if aws_profile == '':
+            con.query("CALL load_aws_credentials();")
+            s3 = boto3.Session().resource('s3')
+        else:
+            con.query(f"CALL load_aws_credentials('{aws_profile}');")
+            s3 = boto3.Session(profile_name=aws_profile).resource('s3')
+
         existing_schemas = con.query('select distinct schema_name from information_schema.schemata').fetchall()
         existing_schemas = [o[0] for o in existing_schemas]
         for schema in schemas:
@@ -26,7 +32,6 @@ if __name__ == '__main__':
                 con.query(f"DROP SCHEMA {schema} CASCADE;")
             con.query(f"CREATE SCHEMA {schema};")
 
-        s3 = boto3.Session(profile_name=aws_profile).resource('s3')
         bucket = s3.Bucket(s3_bucket)
         for obj in bucket.objects.filter(Prefix=s3_prefix):
             con.query(create_view_query(obj.key))
