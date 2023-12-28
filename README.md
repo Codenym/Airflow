@@ -27,3 +27,11 @@ Used by political organizations to notify the IRS of their status as tax-exempt 
 #### Form 8872
 
 Required for section 527 tax-exempt political organizations to report certain received contributions and made expenditures.  Organizations must file this form alongside Form 8871 to report contributions and expenditures, especially when there are changes to the organization's status or operations.  Form 8872 has 2 types of child records, Schedule A (Itemized Contributions) and Schedule B (Itemized Expenditures).
+
+## Database Usage
+
+1. Connect to database.duckdb with dbeaver or other SQL client
+2. Run the following query to authenticate with aws:
+```sql  
+CALL load_aws_credentials('codenym');
+```
