@@ -33,5 +33,5 @@ Required for section 527 tax-exempt political organizations to report certain re
 1. Connect to database.duckdb with dbeaver or other SQL client
 2. Run the following query to authenticate with aws:
 ```sql  
-CALL load_aws_credentials('codenym');
+CALL load_aws_credentials('codenym')
 ```
