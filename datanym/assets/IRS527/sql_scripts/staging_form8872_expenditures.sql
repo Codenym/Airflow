@@ -12,8 +12,8 @@ select
         end                  as expenditure_date,
     expenditure_purpose
 from
-    $form8872_schedule_b_landing
-        left join $form8872_recipients r on (name = upper(reciepient_name) or (name is null and reciepient_name is null)) and
+    $landing_form8872_schedule_b
+        left join $staging_form8872_recipients r on (name = upper(reciepient_name) or (name is null and reciepient_name is null)) and
                                            (address_1 = upper(reciepient_address_1) or (address_1 is null and reciepient_address_1 is null)) and
                                            (address_2 = upper(reciepient_address_2) or (address_2 is null and reciepient_address_2 is null)) and
                                            (address_city = upper(reciepient_address_city) or (address_city is null and reciepient_address_city is null)) and

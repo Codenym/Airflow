@@ -6,8 +6,8 @@ select
     cast(case when agg_contribution_ytd = '' then null else agg_contribution_ytd end as numeric) as agg_contribution_ytd,
     case when contribution_date = '' then NULL else strptime(contribution_date,'%Y%m%d')::date end       as contribution_date
 from
-    $form8872_schedule_a_landing
-        left join $form8872_contributors_staging r
+    $landing_form8872_schedule_a
+        left join $staging_form8872_contributors r
                   on (name = upper(contributor_name) or (name is null and contributor_name is null)) and
                      (address_1 = upper(contributor_address_1) or
                       (address_1 is null and contributor_address_1 is null)) and

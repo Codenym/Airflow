@@ -12,7 +12,7 @@ from
               mailing_address_zip_code as zip_code,
               mailing_address_zip_ext  as zip_ext
           from
-              $form8871_landing
+              $landing_form8871
           union all
           select
               custodian_address_1        as address_1,
@@ -22,7 +22,7 @@ from
               custodian_address_zip_code as zip_code,
               custodian_address_zip_ext  as zip_ext
           from
-              $form8871_landing
+              $landing_form8871
           union all
           select
               contact_address_1        as address_1,
@@ -32,7 +32,7 @@ from
               contact_address_zip_code as zip_code,
               contact_address_zip_ext  as zip_ext
           from
-              $form8871_landing
+              $landing_form8871
           union all
           select
               business_address_1        as address_1,
@@ -42,7 +42,7 @@ from
               business_address_zip_code as zip_code,
               business_address_zip_ext  as zip_ext
           from
-              $form8871_landing
+              $landing_form8871
           union all
           select
               entity_address_1            as address_1,
@@ -52,7 +52,7 @@ from
               entity_address_zip_code     as zip_code,
               entity_address_zip_code_ext as zip_ext
           from
-              $form8871_directors_landing
+              $landing_form8871_directors
           union all
           select
               entity_address_1            as address_1,
@@ -62,7 +62,7 @@ from
               entity_address_zip_code     as zip_code,
               entity_address_zip_ext as zip_ext
           from
-              $form8871_related_entities_landing
+              $landing_form8871_related_entities
           union all
           select
               mailing_address_1        as address_1,
@@ -72,7 +72,7 @@ from
               mailing_address_zip_code as zip_code,
               mailing_address_zip_ext  as zip_ext
           from
-              $form8872_landing
+              $landing_form8872
           union all
           select
               contact_address_1        as address_1,
@@ -82,7 +82,7 @@ from
               contact_address_zip_code as zip_code,
               contact_address_zip_ext  as zip_ext
           from
-              $form8872_landing
+              $landing_form8872
           union all
           select
               business_address_1        as address_1,
@@ -92,7 +92,7 @@ from
               business_address_zip_code as zip_code,
               business_address_zip_ext  as zip_ext
           from
-              $form8872_landing
+              $landing_form8872
           union all
           select
               custodian_address_1        as address_1,
@@ -102,4 +102,4 @@ from
               custodian_address_zip_code as zip_code,
               custodian_address_zip_ext  as zip_ext
           from
-              $form8872_landing) t) t2
+              $landing_form8872) t) t2

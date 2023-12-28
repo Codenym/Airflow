@@ -10,5 +10,5 @@ select distinct
     upper(reciepient_employer)         as employer,
     upper(recipient_occupation)        as occupation
 from
-    $form8872_schedule_b_landing
+    $landing_form8872_schedule_b
 
