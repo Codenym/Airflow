@@ -164,10 +164,11 @@ def load_sql_file(sql_file: Path):
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872_contributors(landing_form8872_schedule_a):
+def staging_form8872_contributors(landing_form8872_schedule_a, curated_addresses):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872_contributors.sql"))
     return SQL(sql_template,
-               landing_form8872_schedule_a=landing_form8872_schedule_a
+               landing_form8872_schedule_a=landing_form8872_schedule_a,
+                curated_addresses=curated_addresses
                )
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
@@ -179,10 +180,11 @@ def staging_form8872_contributions(landing_form8872_schedule_a, staging_form8872
                )
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872_recipients(landing_form8872_schedule_b):
+def staging_form8872_recipients(landing_form8872_schedule_b, curated_addresses):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872_recipients.sql"))
     return SQL(sql_template,
                landing_form8872_schedule_b=landing_form8872_schedule_b,
+                curated_addresses=curated_addresses
                )
 
 
@@ -196,31 +198,33 @@ def staging_form8872_expenditures(landing_form8872_schedule_b, staging_form8872_
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872(landing_form8872, staging_addresses):
+def staging_form8872(landing_form8872, curated_addresses):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872.sql"))
     return SQL(sql_template,
                landing_form8872=landing_form8872,
-               staging_addresses=staging_addresses
+               curated_addresses=curated_addresses
                )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_addresses(landing_form8871, landing_form8871_directors, landing_form8871_related_entities, landing_form8872):
-    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_addresses.sql"))
+def curated_addresses(landing_form8871, landing_form8871_directors, landing_form8871_related_entities, landing_form8872, landing_form8872_schedule_a, landing_form8872_schedule_b):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_addresses.sql"))
     return SQL(sql_template,
                landing_form8871=landing_form8871,
                landing_form8871_directors=landing_form8871_directors,
                 landing_form8871_related_entities=landing_form8871_related_entities,
                 landing_form8872=landing_form8872,
+                landing_form8872_schedule_a=landing_form8872_schedule_a,
+                landing_form8872_schedule_b=landing_form8872_schedule_b
                )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8871(landing_form8871, staging_addresses):
+def staging_form8871(landing_form8871, curated_addresses):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871.sql"))
     return SQL(sql_template,
                landing_form8871=landing_form8871,
-                staging_addresses=staging_addresses
+                curated_addresses=curated_addresses
                )
 
 
@@ -233,18 +237,18 @@ def staging_form8871_ein(landing_form8871_ein):
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8871_directors(landing_form8871_directors, staging_addresses):
+def staging_form8871_directors(landing_form8871_directors, curated_addresses):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871_directors.sql"))
     return SQL(sql_template,
                landing_form8871_directors=landing_form8871_directors,
-                staging_addresses=staging_addresses
+                curated_addresses=curated_addresses
                )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8871_related_entities(landing_form8871_related_entities, staging_addresses):
+def staging_form8871_related_entities(landing_form8871_related_entities, curated_addresses):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities.sql"))
     return SQL(sql_template,
                landing_form8871_related_entities=landing_form8871_related_entities,
-                staging_addresses=staging_addresses
+                curated_addresses=curated_addresses
                )

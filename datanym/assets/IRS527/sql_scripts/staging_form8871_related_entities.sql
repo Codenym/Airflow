@@ -8,7 +8,7 @@ select
     ent_add.address_id as entity_address_id
 from
     $landing_form8871_related_entities
-        left join $staging_addresses as ent_add on
+        left join $curated_addresses as ent_add on
             ((ent_add.address_1 = entity_address_1) or
              (ent_add.address_1 is null and entity_address_1 is null)) and
             ((ent_add.address_2 = entity_address_2) or
