@@ -8,6 +8,7 @@ import pandas as pd
 from .core import (extract_file_from_zip,
                    download_file,
                    clean_extraction_directory)
+from ...resources.duckpond import SQL
 
 from dagster import (asset,
                      AssetOut,
@@ -101,13 +102,16 @@ def fix_malformed_row(line: str) -> str:
         ('''|"G. Brockman|''', '''|"G. Brockman"|'''),
         ('''|"I Factor|''', '''|"I Factor"|'''),
         ('''|"522 Highland Avenue |''', '''|"522 Highland Avenue"|'''),
-        ('''|"AV-TECH INDUSTRIES|''', '''|"AV-TECH INDUSTRIES"|'''),#
+        ('''|"AV-TECH INDUSTRIES|''', '''|"AV-TECH INDUSTRIES"|'''),  #
         ('''|Yard sign, stickers and website design"|''', '''|"Yard sign, stickers and website design"|'''),
-        ('''|One Long Grove is a local political action committee which supports and opposes state, county and local political candidates and reports its business in detail to the Illinois State Board of Elections."|''', '''|"One Long Grove is a local political action committee which supports and opposes state, county and local political candidates and reports its business in detail to the Illinois State Board of Elections."|'''),
+        (
+        '''|One Long Grove is a local political action committee which supports and opposes state, county and local political candidates and reports its business in detail to the Illinois State Board of Elections."|''',
+        '''|"One Long Grove is a local political action committee which supports and opposes state, county and local political candidates and reports its business in detail to the Illinois State Board of Elections."|'''),
         ('''|Inc"|''', '''|"Inc"|'''),
         ('''|'AGGREGATE BELOW THRESHOLD"|''', '''|"AGGREGATE BELOW THRESHOLD"|'''),
-        ('''|Fulfillment/Premium items (Ronald Reagan, Rendezvous With Destiny"|''', '''|"Fulfillment/Premium items (Ronald Reagan, Rendezvous With Destiny"|'''),
-        )
+        ('''|Fulfillment/Premium items (Ronald Reagan, Rendezvous With Destiny"|''',
+         '''|"Fulfillment/Premium items (Ronald Reagan, Rendezvous With Destiny"|'''),
+    )
 
     for m in malformed:
         line = line.replace(m[0], m[1])
@@ -117,13 +121,13 @@ def fix_malformed_row(line: str) -> str:
 @multi_asset(
     group_name="IRS_527",
     outs={
-        "form8871_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "form8871_directors_officers_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "form8871_related_entities_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "form8871_ein_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "form8872_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "form8872_schedule_a_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
-        "form8872_schedule_b_staging": AssetOut(io_manager_key="local_to_s3_io_manager"),
+        "landing_form8871": AssetOut(io_manager_key="DuckPondIOManager"),
+        "landing_form8871_directors": AssetOut(io_manager_key="DuckPondIOManager"),
+        "landing_form8871_related_entities": AssetOut(io_manager_key="DuckPondIOManager"),
+        "landing_form8871_ein": AssetOut(io_manager_key="DuckPondIOManager"),
+        "landing_form8872": AssetOut(io_manager_key="DuckPondIOManager"),
+        "landing_form8872_schedule_a": AssetOut(io_manager_key="DuckPondIOManager"),
+        "landing_form8872_schedule_b": AssetOut(io_manager_key="DuckPondIOManager"),
     }
 )
 def clean_527_data(raw_527_data: Path, data_dictionary: dict):
@@ -147,169 +151,100 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                     previous_row = previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                 if i % 500000 == 0:
                     logger.info(f"Processed {i / 500000}M rows processed so far.")
-                    # if i > 0: break
+                    if i > 0: break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
 
-    return tuple(records[key] for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
+    return tuple(SQL('select * from $df', df=pd.DataFrame(records[key])) for key in ['1', 'D', 'R', 'E', '2', 'A', 'B'])
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8871_ein_landing(form8871_ein_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8871_ein_staging
+def load_sql_file(sql_file: Path):
+    with open(sql_file, 'r') as f: return f.read()
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8871_directors_landing(form8871_directors_officers_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8871_directors_officers_staging
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_contributors(landing_form8872_schedule_a):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872_contributors.sql"))
+    return SQL(sql_template,
+               landing_form8872_schedule_a=landing_form8872_schedule_a
+               )
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_contributions(landing_form8872_schedule_a, staging_form8872_contributors):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872_contributions.sql"))
+    return SQL(sql_template,
+               landing_form8872_schedule_a=landing_form8872_schedule_a,
+               staging_form8872_contributors=staging_form8872_contributors
+               )
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_recipients(landing_form8872_schedule_b):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872_recipients.sql"))
+    return SQL(sql_template,
+               landing_form8872_schedule_b=landing_form8872_schedule_b,
+               )
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8871_related_entities_landing(form8871_related_entities_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8871_related_entities_staging
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_expenditures(landing_form8872_schedule_b, staging_form8872_recipients):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872_expenditures.sql"))
+    return SQL(sql_template,
+               landing_form8872_schedule_b=landing_form8872_schedule_b,
+               staging_form8872_recipients=staging_form8872_recipients
+               )
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8871_landing(form8871_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8871_staging
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872(landing_form8872, staging_addresses):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8872.sql"))
+    return SQL(sql_template,
+               landing_form8872=landing_form8872,
+               staging_addresses=staging_addresses
+               )
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8872_landing(form8872_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8872_staging
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_addresses(landing_form8871, landing_form8871_directors, landing_form8871_related_entities, landing_form8872):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_addresses.sql"))
+    return SQL(sql_template,
+               landing_form8871=landing_form8871,
+               landing_form8871_directors=landing_form8871_directors,
+                landing_form8871_related_entities=landing_form8871_related_entities,
+                landing_form8872=landing_form8872,
+               )
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8872_schedule_a_landing(form8872_schedule_a_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8872_schedule_a_staging
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871(landing_form8871, staging_addresses):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871.sql"))
+    return SQL(sql_template,
+               landing_form8871=landing_form8871,
+                staging_addresses=staging_addresses
+               )
 
 
-@asset(group_name="IRS_527", io_manager_key='s3_to_rs_manager')
-def form8872_schedule_b_landing(form8872_schedule_b_staging):
-    """
-    Loads data from s3 into sql
-    """
-    return form8872_schedule_b_staging
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_ein(landing_form8871_ein):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871_ein.sql"))
+    return SQL(sql_template,
+               landing_form8871_ein=landing_form8871_ein,
+               )
 
 
-def load_fill_sql_file(sql_file: Path):
-    with open(sql_file, 'r') as f: sql_query = f.read()
-    return sql_query
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_directors(landing_form8871_directors, staging_addresses):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871_directors.sql"))
+    return SQL(sql_template,
+               landing_form8871_directors=landing_form8871_directors,
+                staging_addresses=staging_addresses
+               )
 
 
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8872_contributors(form8872_schedule_a_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributors.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8872_contributors',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8872_contributions(form8872_schedule_a_landing, form8872_contributors):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_contributions.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8872_contributions',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8872_recipients(form8872_schedule_b_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_recipients.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8872_recipients',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8872_expenditures(form8872_schedule_b_landing, form8872_recipients):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872_expenditures.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8872_expenditures',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8872(form8872_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8872.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8872',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def addresses(form8871_landing, form8871_directors_landing, form8871_related_entities_landing, form8872_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/addresses.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'addresses',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8871(form8871_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8871',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8871_ein(form8871_ein_landing):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_ein.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8871_ein',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8871_directors(form8871_directors_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_directors.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8871_directors',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-
-@asset(group_name="IRS_527", io_manager_key="rs_manager")
-def form8871_related_entities(form8871_related_entities_landing, addresses):
-    sql_file = Path("datanym/assets/IRS527/sql_scripts/form8871_related_entities.sql")
-    sql_query = load_fill_sql_file(sql_file=sql_file)
-    return {'table_name': 'form8871_related_entities',
-            'sql_query': sql_query,
-            'sql_file': sql_file}
-
-# @asset(group_name="IRS_527", io_manager_key="rs_manager")
-# def landing_cleanup(form8871, form8871_ein, form8871_directors,
-#                     form8871_related_entities, form8872, form8872_contributions,
-#                     form8872_expenditures):
-#     sql_file = Path("datanym/assets/IRS527/sql_scripts/landing_cleanup.sql")
-#     sql_query = load_fill_sql_file(sql_file=sql_file)
-#     return {'sql_query': sql_query,
-#             'sql_file': sql_file}
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_related_entities(landing_form8871_related_entities, staging_addresses):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities.sql"))
+    return SQL(sql_template,
+               landing_form8871_related_entities=landing_form8871_related_entities,
+                staging_addresses=staging_addresses
+               )
