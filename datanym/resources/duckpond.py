@@ -6,13 +6,14 @@ from string import Template
 from typing import Mapping
 from .output_metadata import add_metadata
 
-
 class SQL:
     def __init__(self, sql, **bindings):
         for binding in bindings:
             assert binding in sql
         self.sql = sql
         self.bindings = bindings
+        # assert partitions is None or isinstance(partitions, list) or isinstance(partitions, tuple)
+        # self.partitions = partitions
 
 
 def sql_to_string(s: SQL) -> str:
@@ -87,9 +88,6 @@ class DuckPondIOManager(IOManager):
                 f"Expected asset to return a SQL; got {select_statement!r}"
             )
 
-        # table_sample = pd.read_sql(f'''select * from {obj["table_name"]} limit 10;''', conn).to_markdown()
-
-        print(sql_to_string(select_statement))
         self.duckdb.query(
             SQL(
                 sql="copy $select_statement to $url (format parquet)",
@@ -103,8 +101,6 @@ class DuckPondIOManager(IOManager):
                     'sample': MetadataValue.md(sample)
                     }
         add_metadata(context, metadata)
-
-
 
     def load_input(self, context) -> SQL:
         return SQL("select * from read_parquet($url)", url=self._get_s3_url(context))

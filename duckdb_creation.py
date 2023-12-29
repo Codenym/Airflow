@@ -1,7 +1,7 @@
 import duckdb
 import boto3
 
-schemas = ['landing', 'staging', 'curated', 'analytics']
+schemas = ['landing', 'dev', 'staging', 'curated', 'analytics']
 s3_bucket = 'datanym-pipeline'
 s3_prefix = 'duckdb/'
 aws_profile = 'codenym'
@@ -15,7 +15,7 @@ def create_view_query(key):
     return f"create or replace view {schema_name}.{table_name} as (select * from read_parquet('{file_path}'))"
 
 if __name__ == '__main__':
-    with duckdb.connect("database.duckdb") as con:
+    with duckdb.connect("datalake.duckdb") as con:
         con.query("install httpfs; load httpfs;")
         con.query("install aws; load aws;")
         con.query(f"CALL load_aws_credentials('{aws_profile}');")
@@ -29,7 +29,9 @@ if __name__ == '__main__':
 
         bucket = s3.Bucket(s3_bucket)
         for obj in bucket.objects.filter(Prefix=s3_prefix):
-            con.query(create_view_query(obj.key))
+            qry = create_view_query(obj.key)
+            print(qry)
+            con.query(qry)
 
 
 
