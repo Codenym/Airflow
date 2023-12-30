@@ -1,5 +1,5 @@
 select
-    uuid() as address_id,
+    uuid() as address_uuid,
     *
 from
     (select distinct

@@ -18,10 +18,10 @@ select form_id_number,
            else strptime(org_formation_date, '%Y%m%d')::date
            end             as org_formation_date,
        custodian_name,
-       cus_add.address_id  as custodian_address_id,
+       cus_add.address_uuid  as custodian_address_id,
 
        contact_person_name,
-       con_add.address_id  as contact_address_id,
+       con_add.address_uuid  as contact_address_id,
 
        case
            when qtr_indicator = '' then null
@@ -37,8 +37,8 @@ select form_id_number,
            else strptime(pre_or_post_elect_date, '%Y%m%d')::date
            end             as pre_or_post_elect_date,
        pre_or_post_elect_state,
-       mail_add.address_id as mailing_address_id,
-       bus_add.address_id  as business_address_id,
+       mail_add.address_uuid as mailing_address_id,
+       bus_add.address_uuid  as business_address_id,
        insert_datetime
 from
     $landing_form8872 base

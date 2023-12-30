@@ -5,7 +5,7 @@ select
     ein_uuid,
     entity_name,
     entity_title,
-    ent_add.address_id as entity_address_id
+    ent_add.address_uuid as entity_address_id
 from
     $landing_form8871_directors as base
         left join $curated_eins as ein on ein.ein = base.ein and ein.organization_name = base.org_name

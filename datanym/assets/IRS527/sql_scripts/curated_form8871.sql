@@ -10,9 +10,9 @@ select base.form_id_number,
 end
 as established_date,
     custodian_name,
-    cus_add.address_id  as custodian_address_id,
+    cus_add.address_uuid  as custodian_address_id,
     contact_person_name,
-    con_add.address_id  as contact_address_id,
+    con_add.address_uuid  as contact_address_id,
     exempt_8872_indicator,
     exempt_state,
     exempt_990_indicator,
@@ -25,12 +25,10 @@ as material_change_date,
     insert_datetime,
     related_entity_bypass,
     eain_bypass,
-    eain_id,
-    mail_add.address_id as mailing_address_id,
-    bus_add.address_id  as business_address_i,
+    mail_add.address_uuid as mailing_address_id,
+    bus_add.address_uuid  as business_address_i
 from
     $landing_form8871 as base
-        left join $landing_form8871_eain as eain on eain.form_id_number = base.form_id_number
         left join $curated_eins as ein on ein.ein = base.ein and ein.organization_name = base.organization_name
         left join $curated_addresses as mail_add on ((mail_add.address_1 = mailing_address_1) or (mail_add.address_1 is null and mailing_address_1 is null)) and
                                            ((mail_add.address_2 = mailing_address_2) or (mail_add.address_2 is null and mailing_address_2 is null)) and

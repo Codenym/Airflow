@@ -1,10 +1,10 @@
 select uuid() as form8872_entity_uuid,
        name,
-       address_id,
+       address_uuid,
        employer,
        occupation
 from (select distinct upper(contributor_name)       as name,
-                      address_id                    as address_id,
+                      address_uuid                  as address_uuid,
                       upper(contributor_employer)   as employer,
                       upper(contributor_occupation) as occupation
       from $landing_form8872_schedule_a
@@ -24,7 +24,7 @@ from (select distinct upper(contributor_name)       as name,
 
       union
       select distinct upper(reciepient_name)      as name,
-                      address_id                  as address_id,
+                      address_uuid                as address_id,
                       upper(reciepient_employer)  as employer,
                       upper(recipient_occupation) as occupation
       from $landing_form8872_schedule_b

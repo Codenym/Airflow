@@ -1,13 +1,12 @@
--- CALL load_aws_credentials('codenym')
 with contributors as (select *
                       from $curated_form8872_entities r
                                left join $curated_addresses a
-                                         using (address_id))
+                                         using (address_uuid))
 
 select sched_b_id                 as sched_b_id,
        form_id_number             as form_id_number,
-       cont.form8872_entity_id    as form8872_entity_id,
-       cont.address_id            as address_id,
+       cont.form8872_entity_uuid    as form8872_entity_id,
+       cont.address_uuid            as address_uuid,
        cast(case
                 when expenditure_amount = '' then null
                 else expenditure_amount
