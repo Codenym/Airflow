@@ -1,10 +1,9 @@
 select
-    record_type,
     form_id_number,
     director_id,
     ein_uuid,
-    entity_name,
-    entity_title,
+    upper(entity_name),
+    upper(entity_title),
     ent_add.address_uuid as entity_address_id
 from
     $landing_form8871_directors as base

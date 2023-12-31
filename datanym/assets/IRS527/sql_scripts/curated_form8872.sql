@@ -17,10 +17,10 @@ select form_id_number,
            when org_formation_date = '' then NULL
            else strptime(org_formation_date, '%Y%m%d')::date
            end             as org_formation_date,
-       custodian_name,
+       upper(custodian_name),
        cus_add.address_uuid  as custodian_address_id,
 
-       contact_person_name,
+       upper(contact_person_name),
        con_add.address_uuid  as contact_address_id,
 
        case
