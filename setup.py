@@ -6,6 +6,7 @@ setup(
     install_requires=[
         "boto3",
         "credstash",
+        "duckdb",
         "dagster",
         "dagster_aws",
         "dagster-webserver",
