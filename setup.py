@@ -18,6 +18,7 @@ setup(
         "lxml",
         "scrapelib",
         "iso8601",
+        "sqlescapy",
 
     ],
     extras_require={"dev": ["pytest"]},
