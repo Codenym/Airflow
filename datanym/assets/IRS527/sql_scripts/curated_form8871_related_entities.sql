@@ -1,9 +1,9 @@
 select
     form_id_number,
     entity_id,
-    ein_uuid
-    entity_name,
-    entity_relationship,
+    ein_uuid,
+    upper(entity_name),
+    upper(entity_relationship),
     ent_add.address_uuid as entity_address_id
 from
     $landing_form8871_related_entities base

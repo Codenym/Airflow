@@ -17,6 +17,6 @@ from (select 'Schedule A (contribution)' as category,
              address_uuid               as address_id,
              expenditure_amount         as amount,
              expenditure_date           as transaction_date,
-             purpose                    as purpose
+             upper(purpose)                    as purpose
       from $staging_form8872_expenditures)
 
