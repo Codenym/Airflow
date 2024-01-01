@@ -33,10 +33,11 @@ def bulk_download() -> Path:
     https://github.com/unitedstates/congress/wiki/votes
     """
 
-    base_dir = Path("data")
-    for congress in [118]:#[110, 111, 112, 113, 114, 115, 116, 117, 118]:
+    base_dir = Path("data/sessions")
+    for congress in [110, 111, 112, 113, 114, 115, 116, 117, 118]:
         opts = {"congress": congress, "chamber": "house"}
         votes.run(opts)
+        shutil.move("data/" + str(congress), base_dir / str(congress))
     return base_dir
 
 
@@ -66,7 +67,7 @@ def parse_votes(bulk_download) -> tuple[SQL, SQL, SQL]:
         'amendment_author','amendment_number','amendment_type',
         'category','chamber','congress','date','number','question','requires','result','result_text',
         'session','source_url','subject','type','updated_at','vote_id']
-    for file in Path("data").glob("**/*.json"):
+    for file in Path("data/sessions/").glob("**/*.json"):
         with open(file) as f:
             data = json.load(f)
 
