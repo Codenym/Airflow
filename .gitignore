@@ -163,3 +163,5 @@ data/*
 sqlite_527.db
 .virtual_documents
 tmp*
+database.duckdb.wal
+datanym/assets/HouseVotes/copilot_scratch.py
