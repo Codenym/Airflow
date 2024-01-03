@@ -10,7 +10,7 @@ If you have a request for a dataset to be created, please create an issue.  It i
 
 If it's clear that it's feasible and impactful that'd go a long way to getting it higher on the priority list.
 
-## Contributions
+## Contributing
 
 If you'd like to contribute, you should start an issue explaining what you'd like to do.  We can chat then about direction and next steps.
 
