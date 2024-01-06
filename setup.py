@@ -19,7 +19,8 @@ setup(
         "scrapelib",
         "iso8601",
         "sqlescapy",
-
+        "huggingface_hub",
+        "dbcreator"
     ],
     extras_require={"dev": ["pytest"]},
 )

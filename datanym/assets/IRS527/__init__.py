@@ -13,6 +13,7 @@ from dagster import (asset,
                      multi_asset,
                      get_dagster_logger,
                      )
+from dbcreator.duck_db import FlexPath
 
 
 @asset(group_name="IRS_527", io_manager_key="local_io_manager")
@@ -275,3 +276,24 @@ def curated_form8871_related_entities(landing_form8871_related_entities, curated
                curated_addresses=curated_addresses,
                curated_eins=curated_eins
                )
+
+
+@asset(group_name="IRS_527", io_manager_key="duckDB_creator_io_manager")
+def all_assets_to_duckdb(curated_form8871, curated_form8871_directors, curated_form8871_related_entities,
+                         curated_form8871_eains, curated_form8872, curated_form8872_entities,
+                         curated_form8872_transactions,
+                         staging_form8872_contributions, staging_form8872_expenditures, curated_addresses,
+                         curated_eins, landing_form8871, landing_form8871_directors, landing_form8871_related_entities,
+                         landing_form8871_eain, landing_form8872, landing_form8872_schedule_a,
+                         landing_form8872_schedule_b, ):
+    # return FlexPath('s3://datanym-pipeline/duckdb/')
+    return (curated_form8871, curated_form8871_directors, curated_form8871_related_entities,
+            curated_form8871_eains, curated_form8872, curated_form8872_entities, curated_form8872_transactions,
+            staging_form8872_contributions, staging_form8872_expenditures, curated_addresses,
+            curated_eins, landing_form8871, landing_form8871_directors, landing_form8871_related_entities,
+            landing_form8871_eain, landing_form8872, landing_form8872_schedule_a, landing_form8872_schedule_b)
+
+
+@asset(group_name="IRS_527", io_manager_key="local_to_hf_io_manager")
+def duckdb_to_hf(all_assets_to_duckdb):
+    return (all_assets_to_duckdb, Path("Codenym/ISR-527-Political-Non-Profits/database.duckdb"))
