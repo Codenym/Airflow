@@ -3,9 +3,7 @@ from huggingface_hub import upload_file
 import os
 from pathlib import Path
 
-os.environ['HF_TOKEN'] = "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"
-from dbcreator.duck_db import FlexPath, create_duckdb_database_from_s3_parquet
-
+from dagster import EnvVar
 
 class LocalToHFManager(IOManager):
     def handle_output(self, context: OutputContext, from_to_info: tuple[Path, Path]):
@@ -16,7 +14,8 @@ class LocalToHFManager(IOManager):
             path_or_fileobj=from_path,
             path_in_repo=str(Path(*to_path.parts[2:])),
             repo_id=str(Path(*to_path.parts[:2])),
-            repo_type='dataset'
+            repo_type='dataset',
+            token=EnvVar('HF_TOKEN')
         )
 
     def load_input(self, context: InputContext):
