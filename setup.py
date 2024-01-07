@@ -20,7 +20,7 @@ setup(
         "iso8601",
         "sqlescapy",
         "huggingface_hub",
-        "dbcreator"
+        "ezduckdb",
     ],
     extras_require={"dev": ["pytest"]},
 )

@@ -15,7 +15,6 @@ class LocalToHFManager(IOManager):
             path_in_repo=str(Path(*to_path.parts[2:])),
             repo_id=str(Path(*to_path.parts[:2])),
             repo_type='dataset',
-            token=EnvVar('HF_TOKEN')
         )
 
     def load_input(self, context: InputContext):
