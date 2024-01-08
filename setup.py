@@ -21,7 +21,7 @@ setup(
         "sqlescapy",
         "huggingface_hub",
         "ezduckdb",
-        "dagster_cloud",
+        "dagster-cloud",
     ],
     extras_require={"dev": ["pytest"]},
 )
