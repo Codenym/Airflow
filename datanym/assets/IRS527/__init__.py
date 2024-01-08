@@ -183,8 +183,8 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                     )
                 if i % 500000 == 0:
                     logger.info(f"Processed {i / 500000}M rows processed so far.")
-                    if i > 0:
-                        break
+                    # if i > 0:
+                    #    break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
@@ -201,17 +201,50 @@ def load_sql_file(sql_file: Path):
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_entities_schedule_a(
+    landing_form8872_schedule_a,
+    curated_addresses,
+):
+    sql_template = load_sql_file(
+        sql_file=Path(
+            "datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_a.sql"
+        )
+    )
+    return SQL(
+        sql_template,
+        landing_form8872_schedule_a=landing_form8872_schedule_a,
+        curated_addresses=curated_addresses,
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_entities_schedule_b(
+    curated_addresses, landing_form8872_schedule_b
+):
+    sql_template = load_sql_file(
+        sql_file=Path(
+            "datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_b.sql"
+        )
+    )
+    return SQL(
+        sql_template,
+        curated_addresses=curated_addresses,
+        landing_form8872_schedule_b=landing_form8872_schedule_b,
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8872_entities(
-    landing_form8872_schedule_a, curated_addresses, landing_form8872_schedule_b
+    staging_form8872_entities_schedule_a,
+    staging_form8872_entities_schedule_b,
 ):
     sql_template = load_sql_file(
         sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_form8872_entities.sql")
     )
     return SQL(
         sql_template,
-        landing_form8872_schedule_a=landing_form8872_schedule_a,
-        curated_addresses=curated_addresses,
-        landing_form8872_schedule_b=landing_form8872_schedule_b,
+        staging_form8872_entities_schedule_a=staging_form8872_entities_schedule_a,
+        staging_form8872_entities_schedule_b=staging_form8872_entities_schedule_b,
     )
 
 
@@ -427,5 +460,5 @@ def all_assets_to_duckdb(
 def duckdb_to_hf(all_assets_to_duckdb):
     return (
         all_assets_to_duckdb,
-        Path(f"Codenym/ISR-527-Political-Non-Profits/527_orgs.duckdb"),
+        Path("Codenym/ISR-527-Political-Non-Profits/527_orgs.duckdb"),
     )
