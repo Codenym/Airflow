@@ -1,0 +1,4 @@
+locations:
+  - location_name: datanym
+    code_source:
+      package_name: datanym
