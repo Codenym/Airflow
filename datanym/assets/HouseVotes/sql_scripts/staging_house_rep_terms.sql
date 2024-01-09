@@ -1,0 +1,20 @@
+select 
+    upper(type) as record_type,
+    cast(start as date) as start_date,
+    cast("end" as date) as end_date,
+    upper(state) as state,
+    district,
+    upper(party) as party,
+    url,
+    caucus,
+    address,
+    office,
+    phone,
+    fax,
+    contact_form,
+    party_affiliations,
+    rss_url,
+    how,
+    upper(official_full) as official_full,
+    bioguide
+from $landing_house_rep_terms

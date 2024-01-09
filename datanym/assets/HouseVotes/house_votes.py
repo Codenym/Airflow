@@ -142,7 +142,7 @@ def parse_votes_file(file: Path):
 @multi_asset(
     outs = {
         "landing_house_votes": AssetOut(io_manager_key="DuckPondIOManager"),
-        "landing_house_votes_transactions": AssetOut(io_manager_key="DuckPondIOManager")},
+        "landing_house_vote_transactions": AssetOut(io_manager_key="DuckPondIOManager")},
     group_name="house_assets",
 )
 def parse_votes(bulk_download) -> tuple[SQL, SQL]:
@@ -174,8 +174,8 @@ def house_reps_download():
 
 @multi_asset(
     outs = {
-            "landing_house_reps_reps": AssetOut(io_manager_key="DuckPondIOManager"),
-            "landing_house_reps_terms": AssetOut(io_manager_key="DuckPondIOManager"),
+            "landing_house_reps": AssetOut(io_manager_key="DuckPondIOManager"),
+            "landing_house_rep_terms": AssetOut(io_manager_key="DuckPondIOManager"),
     },group_name="house_assets")
 def parse_reps(house_reps_download) -> tuple[SQL, SQL]:
     logger = get_dagster_logger()
@@ -218,12 +218,27 @@ def parse_reps(house_reps_download) -> tuple[SQL, SQL]:
                 terms.append(deepcopy(t))
     return tuple(SQL('select * from $df', df=pd.DataFrame(itm)) for itm in tuple([reps, terms]))
 
+def load_sql_file(sql_file: Path):
+    with open(sql_file, "r") as f:
+        return f.read()
+    
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def staging_house_votes(landing_house_votes):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_votes.sql"))
+    return SQL(sql_template,landing_house_votes=landing_house_votes)
 
-# @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
-# def staging_house_votes(landing_house_votes):
-#     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_form8872_transactions.sql"))
-#     return SQL(sql_template,
-#                staging_form8872_contributions=staging_form8872_contributions,
-#                staging_form8872_expenditures=staging_form8872_expenditures
-#                )
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def staging_house_vote_transactions(landing_house_vote_transactions):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_vote_transactions.sql"))
+    return SQL(sql_template, landing_house_vote_transactions=landing_house_vote_transactions)
 
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def staging_house_reps(landing_house_reps):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_reps.sql"))
+    return SQL(sql_template, landing_house_reps=landing_house_reps)
+
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def staging_house_rep_terms(landing_house_rep_terms):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_rep_terms.sql"))
+    return SQL(sql_template, landing_house_rep_terms=landing_house_rep_terms)

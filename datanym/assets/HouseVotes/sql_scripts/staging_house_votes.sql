@@ -1,0 +1,21 @@
+select
+    upper(category) as category,
+    upper(chamber) as chamber,
+    congress,
+    date::timestamp as date,
+    number,
+    question,
+    requires,
+    upper(result) as result,
+    upper(result_text) as result_text,
+    session,
+    source_url,
+    subject,
+    type,
+    updated_at::timestamp as updated_at,
+    vote_id,
+    bill_congress,
+    bill_number,
+    upper(bill_type),
+    amendment
+from $landing_house_votes
