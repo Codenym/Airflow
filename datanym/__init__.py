@@ -1,6 +1,6 @@
 from dagster import Definitions, load_assets_from_modules
 from .assets import IRS527
-from .assets.HouseVotes import house_votes
+from .assets import HouseVotes
 from .resources.local_io_manager import LocalPickleIOManager
 from pathlib import Path
 from .resources.duckpond import DuckPondIOManager, DuckDB, DuckDBCreatorIOManager
@@ -16,7 +16,7 @@ SET enable_progress_bar = true;
 """
 
 defs = Definitions(
-    assets=load_assets_from_modules([IRS527, house_votes]),
+    assets=load_assets_from_modules([IRS527, HouseVotes]),
     resources={
         "local_io_manager": LocalPickleIOManager(
             local_directory_path=Path(base_local_output_path)
