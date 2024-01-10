@@ -1,3 +1,4 @@
+import logging
 import os.path
 from dagster import IOManager, MetadataValue, get_dagster_logger
 from .output_metadata import add_metadata
@@ -18,20 +19,26 @@ class DuckPondIOManager(IOManager):
         return f"s3://{self.bucket_name}/{self.prefix}{'/'.join(id)}.parquet"
 
     def handle_output(self, context, obj: SQL):
+        logger = get_dagster_logger()
         if obj is None:
             return
 
         if not isinstance(obj, SQL):
             raise ValueError(f"Expected asset to return a SQL; got {obj}")
 
+        logger.info(f"Writing to {self._get_s3_url(context)}")
 
-        self.duckdb.query(
-            SQL(
+        qry = SQL(
                 sql="copy $select_statement to $url (format parquet)",
                 select_statement=obj,
                 url=self._get_s3_url(context),
             )
-        )
+        logger.info(f"duckdb.aws_profile: {self.duckdb.aws_profile}")
+        logger.info(f"duckdb.aws_env_vars: {self.duckdb.aws_env_vars}")
+        logger.info(f"DAGSTER_CLOUD_DEPLOYMENT_NAME: {os.getenv('DAGSTER_CLOUD_DEPLOYMENT_NAME')}")
+        logger.info(f"Running query: {qry.to_string()}")
+        self.duckdb.query(qry)
+
         sample = self.duckdb.query(
             SQL(
                 "select * from read_parquet($url) limit 10",
