@@ -14,7 +14,7 @@ from dagster import (
 )
 
 
-@asset(group_name="IRS_527_LANDING", io_manager_key="local_io_manager")
+@asset(group_name="IRS_527_LANDING")#, io_manager_key="local_io_manager")
 def raw_527_data() -> Path:
     """
     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
