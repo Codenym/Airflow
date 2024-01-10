@@ -35,7 +35,7 @@ from dagster import (
 #     return final_path
 
 
-@asset(group_name="IRS_527_LANDING", io_manager_key="local_io_manager")
+@asset(group_name="IRS_527_LANDING")#, io_manager_key="local_io_manager")
 def data_dictionary() -> dict:
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
