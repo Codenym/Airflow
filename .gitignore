@@ -1,3 +1,5 @@
+.DS_Store
+.idea/
 datanym/output_data/*
 dagster_home/*
 output_data/*

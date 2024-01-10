@@ -19,7 +19,9 @@ setup(
         "scrapelib",
         "iso8601",
         "sqlescapy",
-
+        "huggingface_hub",
+        "ezduckdb",
+        "dagster-cloud",
     ],
     extras_require={"dev": ["pytest"]},
 )

@@ -32,13 +32,13 @@ if __name__ == '__main__':
     aws_profile = 'codenym'
 
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-f", "--filename", default="database.duckdb", help="Name of the database file")
-    parser.add_argument("--tables", action="store_true", help="Create as tables instead of views")
-    parser.add_argument("--clear-schemas", action="store_false",
-                        help="Delete landing, dev, staging, curated, analytics schemas if they exist")
+    parser.add_argument("-f", "--filename", default="database", help="Name of the database file (without extension)")
+    parser.add_argument("--create-tables", action="store_true", help="Create duckdb as tables instead of views")
+    parser.add_argument("--clear-schemas", action="store_false",help="Delete landing, dev, staging, curated, analytics schemas if they exist")
+
     args = vars(parser.parse_args())
 
-    with duckdb.connect(args["filename"]) as con:
+    with duckdb.connect(f"{args['filename']}.duckdb") as con:
         con.query("install httpfs; load httpfs;")
         con.query("install aws; load aws;")
         con.query(f"CALL load_aws_credentials('{aws_profile}');")
@@ -54,6 +54,10 @@ if __name__ == '__main__':
 
         bucket = s3.Bucket(s3_bucket)
         for obj in bucket.objects.filter(Prefix=s3_prefix):
-            run_qry(create_object_query(obj.key, s3_bucket, args["tables"]), con)
+            run_qry(create_object_query(obj.key, s3_bucket, args["create_tables"]), con)
 
         print(f"Done.  Created DuckDB database at {args['filename']}")
+
+
+
+

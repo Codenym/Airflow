@@ -2,8 +2,8 @@ select
     form_id_number,
     director_id,
     ein_uuid,
-    upper(entity_name),
-    upper(entity_title),
+    upper(entity_name) as entity_name,
+    upper(entity_title) as entity_title,
     ent_add.address_uuid as entity_address_id
 from
     $landing_form8871_directors as base
