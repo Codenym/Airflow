@@ -212,11 +212,11 @@ def clean_527_data(data_dictionary: dict):
                     previous_row = (
                             previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                     )
-
-                if i % 250000 == 0:
-                    logger.info(f"Processed {i / 250000}M rows processed so far.")
-                    # if i > 0:
-                    #     break
+                n = 250000
+                if i % n == 0:
+                    logger.info(f"Processed {i / (1e6/n)}M rows processed so far.")
+                    if i > 0:
+                        break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
