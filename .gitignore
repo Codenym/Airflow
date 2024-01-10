@@ -165,3 +165,6 @@ sqlite_527.db
 tmp*
 database.duckdb.wal
 datanym/assets/HouseVotes/copilot_scratch.py
+datanym/assets/HouseVotes/.venv
+datanym/assets/HouseVotes/test.ipynb
+*.swp
