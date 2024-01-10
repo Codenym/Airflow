@@ -1,4 +1,5 @@
 import csv
+import os.path
 from collections import defaultdict
 import io
 from pathlib import Path
@@ -14,7 +15,7 @@ from dagster import (
 )
 
 
-@asset(group_name="IRS_527_LANDING")#, io_manager_key="local_io_manager")
+@asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
 def raw_527_data() -> Path:
     """
     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
@@ -90,7 +91,7 @@ def process_row(row: list, mappings: dict, records: dict) -> None:
             else:
                 print(cell)
                 raise e
-    records[row[0]].append(parsed_row)
+    records[row[0]].writerow(parsed_row)
 
 
 def fix_malformed_row(line: str) -> str:
@@ -161,8 +162,21 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
     """
     Processes the raw_527_data file using the provided data_dictionary mappings for each form type.
     """
+
     logger = get_dagster_logger()
-    records = defaultdict(list)
+
+    outfiles, writers = {}, {}
+    fieldnames = defaultdict(list)
+
+    for key in ["1", "D", "R", "E", "2", "A", "B"]:
+        if os.path.exists(f"temp_{key}.csv"):
+            os.remove(f"temp_{key}.csv")
+        outfiles[key] = open(f"temp_{key}.csv", 'a')
+
+        for position in range(0, len(data_dictionary[key].keys())):
+            fieldnames[key].append(data_dictionary[key][position][0])
+        writers[key] = csv.DictWriter(outfiles[key], fieldnames=fieldnames[key])
+        writers[key].writeheader()
 
     with io.open(raw_527_data, "r", encoding="ISO-8859-1") as raw_file:
         reader = csv.reader(map(fix_malformed_row, raw_file), delimiter="|")
@@ -171,26 +185,30 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                 if len(row) == 0:
                     continue
                 if row[0] in data_dictionary.keys():
-                    process_row(previous_row, data_dictionary, records)
+                    process_row(previous_row, data_dictionary, writers)
                     previous_row = row
                 elif row[0] == "H":
                     previous_row = row
                 elif row[0] == "F":
-                    process_row(previous_row, data_dictionary, records)
+                    process_row(previous_row, data_dictionary, writers)
                 else:
                     previous_row = (
                             previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                     )
+
                 if i % 500000 == 0:
                     logger.info(f"Processed {i / 500000}M rows processed so far.")
                     # if i > 0:
-                    #    break
+                    #     break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
 
+    for key in ["1", "D", "R", "E", "2", "A", "B"]:
+        outfiles[key].close()
+
     return tuple(
-        SQL("select * from $df", df=pd.DataFrame(records[key]))
+        SQL("select * from read_csv_auto($csv, header=true, all_varchar=true)", csv=f"temp_{key}.csv")
         for key in ["1", "D", "R", "E", "2", "A", "B"]
     )
 
@@ -234,6 +252,8 @@ def staging_form8872_schedule_b(
         sql_template,
         landing_form8872_schedule_b=landing_form8872_schedule_b,
     )
+
+
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8872_schedule_a(
         landing_form8872_schedule_a,
@@ -247,6 +267,7 @@ def staging_form8872_schedule_a(
         sql_template,
         landing_form8872_schedule_a=landing_form8872_schedule_a,
     )
+
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8872(
@@ -262,6 +283,7 @@ def staging_form8872(
         landing_form8872=landing_form8872,
     )
 
+
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871_eain(
         landing_form8871_eain,
@@ -275,6 +297,8 @@ def staging_form8871_eain(
         sql_template,
         landing_form8871_eain=landing_form8871_eain,
     )
+
+
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871_related_entities(
         landing_form8871_related_entities,
@@ -304,6 +328,7 @@ def staging_form8871_directors(
         landing_form8871_directors=landing_form8871_directors,
     )
 
+
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871(
         landing_form8871,
@@ -317,6 +342,7 @@ def staging_form8871(
         sql_template,
         landing_form8871=landing_form8871,
     )
+
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="duckDB_creator_io_manager")
 def staging1_assets(
@@ -351,18 +377,6 @@ def staging1_assets(
         staging_form8872_schedule_a,
         staging_form8872_schedule_b,
     )
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
