@@ -15,24 +15,24 @@ from dagster import (
 )
 
 
-@asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
-def raw_527_data() -> Path:
-    """
-    Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
-    """
-
-    url = "https://forms.irs.gov/app/pod/dataDownload/fullData"
-    base_dir = Path("output_data/irs_527")
-
-    zip_path = base_dir / "data.zip"
-    extract_path = base_dir / "unzipped/"
-    final_path = base_dir / "raw_FullDataFile.txt"
-
-    download_file(url, zip_path)
-    extract_file_from_zip(zip_path, extract_path)
-    clean_extraction_directory(zip_path, extract_path, final_path)
-
-    return final_path
+# @asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
+# def raw_527_data() -> Path:
+#     """
+#     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
+#     """
+#
+#     url = "https://forms.irs.gov/app/pod/dataDownload/fullData"
+#     base_dir = Path("output_data/irs_527")
+#
+#     zip_path = base_dir / "data.zip"
+#     extract_path = base_dir / "unzipped/"
+#     final_path = base_dir / "raw_FullDataFile.txt"
+#
+#     download_file(url, zip_path)
+#     extract_file_from_zip(zip_path, extract_path)
+#     clean_extraction_directory(zip_path, extract_path, final_path)
+#
+#     return final_path
 
 
 @asset(group_name="IRS_527_LANDING", io_manager_key="local_io_manager")
@@ -158,13 +158,29 @@ def fix_malformed_row(line: str) -> str:
         "landing_form8872_schedule_b": AssetOut(io_manager_key="DuckPondIOManager"),
     },
 )
-def clean_527_data(raw_527_data: Path, data_dictionary: dict):
+def clean_527_data(data_dictionary: dict):
     """
     Processes the raw_527_data file using the provided data_dictionary mappings for each form type.
     """
 
     logger = get_dagster_logger()
 
+
+    url = "https://forms.irs.gov/app/pod/dataDownload/fullData"
+    base_dir = Path("output_data/irs_527")
+
+    zip_path = base_dir / "data.zip"
+    extract_path = base_dir / "unzipped/"
+    final_path = base_dir / "raw_FullDataFile.txt"
+
+    logger.info(f"Downloading raw 527 data file")
+    download_file(url, zip_path)
+    logger.info(f"Extracting raw 527 data file")
+    extract_file_from_zip(zip_path, extract_path)
+    logger.info(f"Cleaning raw 527 data file directory structure")
+    clean_extraction_directory(zip_path, extract_path, final_path)
+
+    logger.info(f"Setup for processing raw 527 data file")
     outfiles, writers = {}, {}
     fieldnames = defaultdict(list)
 
@@ -178,7 +194,8 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
         writers[key] = csv.DictWriter(outfiles[key], fieldnames=fieldnames[key])
         writers[key].writeheader()
 
-    with io.open(raw_527_data, "r", encoding="ISO-8859-1") as raw_file:
+    logger.info(f"Processing raw 527 data file")
+    with io.open(final_path, "r", encoding="ISO-8859-1") as raw_file:
         reader = csv.reader(map(fix_malformed_row, raw_file), delimiter="|")
         try:
             for i, row in enumerate(reader):
@@ -196,17 +213,19 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                             previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                     )
 
-                if i % 500000 == 0:
-                    logger.info(f"Processed {i / 500000}M rows processed so far.")
+                if i % 250000 == 0:
+                    logger.info(f"Processed {i / 250000}M rows processed so far.")
                     # if i > 0:
                     #     break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
 
+    logger.info(f"Closing raw 527 data files")
     for key in ["1", "D", "R", "E", "2", "A", "B"]:
         outfiles[key].close()
 
+    logger.info(f"Finished processing raw 527 data file")
     return tuple(
         SQL("select * from read_csv_auto($csv, header=true, all_varchar=true)", csv=f"temp_{key}.csv")
         for key in ["1", "D", "R", "E", "2", "A", "B"]
