@@ -1,45 +1,33 @@
-select form_id_number,
-       if(period_begin_date = '', NULL, strptime(period_begin_date, '%Y%m%d')::date) as period_begin_date,
-       if(period_end_date = '', NULL, strptime(period_end_date, '%Y%m%d')::date)     as period_end_date,
-       case when if(initial_report_indicator = '', Null, initial_report_indicator)::int =0 then False
-            when if(initial_report_indicator = '',Null,initial_report_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as initial_report_indicator,
-         case when if(amended_report_indicator='',Null,amended_report_indicator)::int = 0 then False
-              when if(amended_report_indicator='',Null,amended_report_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as amended_report_indicator,
-         case when if(final_report_indicator='',Null,final_report_indicator)::int = 0 then False
-              when if(final_report_indicator='',Null,final_report_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as final_report_indicator,
-        case when if(change_of_address_indicator='',Null,change_of_address_indicator)::int = 0 then False
-             when if(change_of_address_indicator='',Null,change_of_address_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as change_of_address_indicator,
-       ein_uuid,
-       e_mail_address,
-       if(org_formation_date = '', NULL, strptime(org_formation_date, '%Y%m%d')::date)         as org_formation_date,
-       upper(custodian_name)                                                                   as custodian_name,
-       cus_add.address_uuid                                                                    as custodian_address_id,
-       upper(contact_person_name)                                                              as contact_person_name,
-       con_add.address_uuid                                                                    as contact_address_id,
-       if(qtr_indicator = '', null, qtr_indicator::int)                                   as qtr_indicator,
-       if(monthly_rpt_month = '', null, monthly_rpt_month::int)                           as monthly_rpt_month,
-       pre_elect_type,
-       if(pre_or_post_elect_date = '', NULL,
-          strptime(pre_or_post_elect_date, '%Y%m%d')::date)                                    as pre_or_post_elect_date,
-       upper(pre_or_post_elect_state)                                                          as pre_or_post_elect_state,
-       mail_add.address_uuid                                                                   as mailing_address_id,
-       bus_add.address_uuid                                                                    as business_address_id,
-       insert_datetime
-from $landing_form8872 base
+select
+    form_id_number,
+    period_begin_date,
+    period_end_date,
+    initial_report_indicator,
+    amended_report_indicator,
+    final_report_indicator,
+    change_of_address_indicator,
+    base.ein as ein_id,
+    mail_add.id as mailing_address_id,
+    e_mail_address,
+    custodian_name, -- person
+    cus_add.id as custodian_address_id,
+    contact_person_name, -- person
+    con_add.id as contact_address_id,
+    bus_add.id as business_address_id,
+    qtr_indicator,
+    monthly_rpt_month,
+    pre_elect_type,
+    pre_or_post_elect_date,
+    pre_or_post_elect_state,
+    schedule_a_ind,
+    total_sched_a,
+    schedule_b_ind,
+    total_sched_b,
+    insert_datetime,
+
+from $staging_form8872_a base
     left join $curated_eins as ein
-on ein.ein = base.ein and ein.organization_name = base.organization_name
+on ein.id = base.ein and ein.organization_name = base.organization_name
     left join $curated_addresses as mail_add on ((mail_add.address_1 = mailing_address_1) or
     (mail_add.address_1 is null and mailing_address_1 is null)) and
     ((mail_add.address_2 = mailing_address_2) or

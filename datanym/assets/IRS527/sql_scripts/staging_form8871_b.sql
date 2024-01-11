@@ -1,54 +1,27 @@
-select base.form_id_number,
-       case when if(initial_report_indicator = '', Null, initial_report_indicator)::int =0 then False
-            when if(initial_report_indicator = '',Null,initial_report_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as initial_report_indicator,
-         case when if(amended_report_indicator='',Null,amended_report_indicator)::int = 0 then False
-              when if(amended_report_indicator='',Null,amended_report_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as amended_report_indicator,
-         case when if(final_report_indicator='',Null,final_report_indicator)::int = 0 then False
-              when if(final_report_indicator='',Null,final_report_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as final_report_indicator,
-       ein_uuid,
-       e_mail_address,
-       if(established_date = '', NULL, strptime(established_date, '%Y%m%d')::date)    as established_date,
-       upper(custodian_name),
-       cus_add.address_uuid                                                                as custodian_address_id,
-       upper(contact_person_name),
-       con_add.address_uuid                                                                as contact_address_id,
-       case when if(exempt_8872_indicator='', Null, exempt_8872_indicator)::int = 0 then False
-            when if(exempt_8872_indicator='', Null, exempt_8872_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as exempt_8872_indicator,
-       upper(exempt_state),
-       case when if(exempt_990_indicator='', Null, exempt_990_indicator)::int = 0 then False
-            when if(exempt_990_indicator='', Null, exempt_990_indicator)::int = 1 then True
-                else 'Casting Error'
-end
-as exempt_990_indicator,
-       upper(purpose),
-       if(material_change_date = '', NULL, strptime(material_change_date, '%Y%m%d')::date) as material_change_date,
-       insert_datetime,
-       case when if(related_entity_bypass='', Null, related_entity_bypass)::int = 0 then False
-            when if(related_entity_bypass='', Null, related_entity_bypass)::int = 1 then True
-                else 'Casting Error'
-end
-as related_entity_bypass,
-       case when if(eain_bypass='', Null, eain_bypass)::int = 0 then False
-            when if(eain_bypass='', Null, eain_bypass)::int = 1 then True
-                else 'Casting Error'
-end
-as eain_bypass,
-       mail_add.address_uuid                                                               as mailing_address_id,
-       bus_add.address_uuid                                                                as business_address_i
-from $landing_form8871 as base
-         left join $curated_eins as ein on ein.ein = base.ein and ein.organization_name = base.organization_name
+select
+form_id_number as id,
+initial_report_indicator,
+amended_report_indicator,
+final_report_indicator,
+ein as ein_id,
+mail_add.id as mailing_address_id,
+e_mail_address,
+custodian_name, --people table?
+cus_add.id as custodian_address_id,
+contact_person_name, --people table?
+con_add.id as contact_address_id, 
+bus_add.id as business_address_id,
+exempt_8872_indicator,
+exempt_state,
+exempt_990_indicator,
+purpose,
+material_change_date,
+insert_datetime,
+related_entity_bypass,
+eain_bypass
+
+from $staging_form8871_a as base
+         left join $curated_eins as ein on ein.id = base.ein and ein.organization_name = base.organization_name
          left join $curated_addresses as mail_add on ((mail_add.address_1 = mailing_address_1) or
                                                       (mail_add.address_1 is null and mailing_address_1 is null)) and
                                                      ((mail_add.address_2 = mailing_address_2) or

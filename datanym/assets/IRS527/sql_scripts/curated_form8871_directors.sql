@@ -1,12 +1,12 @@
 select
     form_id_number,
     director_id,
-    ein_uuid,
-    upper(entity_name) as entity_name,
-    upper(entity_title) as entity_title,
-    ent_add.address_uuid as entity_address_id
+    ein_id,
+    entity_name,  -- people table?
+    entity_title,
+    ent_add.id as entity_address_id
 from
-    $landing_form8871_directors as base
+    $staging_form8871_directors as base
         left join $curated_eins as ein on ein.ein = base.ein and ein.organization_name = base.org_name
         left join $curated_addresses as ent_add on
             ((ent_add.address_1 = entity_address_1) or
