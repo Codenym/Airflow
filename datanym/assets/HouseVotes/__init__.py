@@ -17,3 +17,4 @@
 #         'github_to_local_io_manager': git_manager
 #     }
 # )
+from .house_votes import  *

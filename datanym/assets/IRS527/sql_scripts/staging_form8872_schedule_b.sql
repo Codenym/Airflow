@@ -1,0 +1,18 @@
+select trim(form_id_number)                                                        as form_id_number,
+       trim(sched_b_id)                                                            as sched_b_id,
+       upper(replace(trim(org_name), '  ', ' '))                                   as org_name,
+       trim(ein)                                                                   as ein,
+       upper(replace(trim(recipient_name), '  ', ' '))                             as recipient_name,
+       upper(replace(trim(recipient_address_1), '  ', ' '))                        as recipient_address_1,
+       upper(replace(trim(recipient_address_2), '  ', ' '))                        as recipient_address_2,
+       upper(replace(trim(recipient_address_city), '  ', ' '))                     as recipient_address_city,
+       upper(replace(trim(recipient_address_state), '  ', ' '))                    as recipient_address_state,
+       trim(recipient_address_zip_code)                                            as recipient_address_zip_code,
+       trim(recipient_address_zip_ext)                                             as recipient_address_zip_ext,
+       upper(replace(trim(recipient_employer), '  ', ' '))                         as recipient_employer,
+       (expenditure_amount::numeric)                                               as expenditure_amount,
+       upper(replace(trim(recipient_occupation), '  ', ' '))                       as recipient_occupation,
+       if(expenditure_date = '', NULL, strptime(expenditure_date, '%Y%m%d')::date) as expenditure_date,
+       upper(replace(trim(expenditure_purpose), '  ', ' '))                        as expenditure_purpose,
+from $landing_form8872_schedule_b
+

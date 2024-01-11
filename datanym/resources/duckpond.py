@@ -1,5 +1,6 @@
+import logging
 import os.path
-from dagster import IOManager, MetadataValue
+from dagster import IOManager, MetadataValue, get_dagster_logger
 from .output_metadata import add_metadata
 from ezduckdb import DuckDB, S3AwarePath, SQL
 
@@ -18,19 +19,26 @@ class DuckPondIOManager(IOManager):
         return f"s3://{self.bucket_name}/{self.prefix}{'/'.join(id)}.parquet"
 
     def handle_output(self, context, obj: SQL):
+        logger = get_dagster_logger()
         if obj is None:
             return
 
         if not isinstance(obj, SQL):
             raise ValueError(f"Expected asset to return a SQL; got {obj}")
 
-        self.duckdb.query(
-            SQL(
+        logger.info(f"Writing to {self._get_s3_url(context)}")
+
+        qry = SQL(
                 sql="copy $select_statement to $url (format parquet)",
                 select_statement=obj,
                 url=self._get_s3_url(context),
             )
-        )
+        logger.info(f"duckdb.aws_profile: {self.duckdb.aws_profile}")
+        logger.info(f"duckdb.aws_env_vars: {self.duckdb.aws_env_vars}")
+        logger.info(f"DAGSTER_CLOUD_DEPLOYMENT_NAME: {os.getenv('DAGSTER_CLOUD_DEPLOYMENT_NAME')}")
+        logger.info(f"Running query: {qry.to_string()}")
+        self.duckdb.query(qry)
+
         sample = self.duckdb.query(
             SQL(
                 "select * from read_parquet($url) limit 10",
@@ -79,25 +87,33 @@ class DuckDBCreatorIOManager(IOManager):
     def handle_output(self, context, obj: list[SQL]):
         # from_to_info is a tuple of (from, to).
         # For example, (S3AwarePath("s3://datanym/duckdb/"), "somedb.duckdb")
+        logger = get_dagster_logger()
 
         if os.path.exists(self.get_name(context)):
             os.remove(self.get_name(context))
         get_schemas_qry = "select distinct schema_name from information_schema.schemata"
-        db = DuckDB(db_location=self.get_name(context))
+        if os.getenv('DAGSTER_CLOUD_DEPLOYMENT_NAME') == 'prod':
+            db = DuckDB(aws_env_vars=True, db_location=self.get_name(context))
+        else:
+            db = DuckDB(aws_profile='codenym', db_location=self.get_name(context))
+
         schemas = db.query(SQL(get_schemas_qry))
         for select_statement in obj:
             schema_name, table_name = S3AwarePath(
                 select_statement.bindings["url"]
             ).get_table_name()
+            logger.info(f"schema_name: {schema_name}, table_name: {table_name}")
 
             if schema_name not in list(schemas["schema_name"]):
                 db.query(SQL(f"create schema {schema_name}"))
+                logger.info(f"Created schema {schema_name}")
                 schemas = db.query(SQL(get_schemas_qry))
 
             qry = SQL(
                 f"create or replace table {schema_name}.{table_name} as $select_statement;",
                 select_statement=select_statement,
             )
+            logger.info(f"Running query: {qry.to_string()}")
             db.query(qry)
 
     def load_input(self, context):
