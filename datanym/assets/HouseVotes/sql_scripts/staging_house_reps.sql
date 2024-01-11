@@ -1,9 +1,9 @@
 select 
-    upper(first) as first_name, 
-    upper(last) as last_name,
+    upper(trim(first)) as first_name, 
+    upper(trim(last)) as last_name,
     upper(official_full) as full_name,
     case when birthday = '' then Null else cast(birthday as date) end as birthday,
-    upper(gender) as gender,
+    upper(trim(gender)) as gender,
     bioguide,
     thomas,
     lis,

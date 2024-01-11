@@ -1,0 +1,21 @@
+select 
+    category,
+    chamber,
+    congress,
+    date,
+    number,
+    question,
+    requires,
+    result,
+    result_text,
+    session,
+    source_url,
+    subject,
+    type,
+    updated_at,
+    vote_id,
+    bill_congress,
+    bill_number,
+    upper(bill_type),
+    amendment
+from $staging_house_votes

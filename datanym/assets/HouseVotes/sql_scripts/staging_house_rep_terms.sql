@@ -1,10 +1,10 @@
 select 
-    upper(type) as record_type,
+    upper(trim(type)) as record_type,
     cast(start as date) as start_date,
     cast("end" as date) as end_date,
-    upper(state) as state,
+    upper(trim(state)) as state,
     district,
-    upper(party) as party,
+    upper(trim(party)) as party,
     url,
     caucus,
     address,
