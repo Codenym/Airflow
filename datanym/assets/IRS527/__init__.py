@@ -15,27 +15,27 @@ from dagster import (
 )
 
 
-# @asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
-# def raw_527_data() -> Path:
-#     """
-#     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
-#     """
-#
-#     url = "https://forms.irs.gov/app/pod/dataDownload/fullData"
-#     base_dir = Path("output_data/irs_527")
-#
-#     zip_path = base_dir / "data.zip"
-#     extract_path = base_dir / "unzipped/"
-#     final_path = base_dir / "raw_FullDataFile.txt"
-#
-#     download_file(url, zip_path)
-#     extract_file_from_zip(zip_path, extract_path)
-#     clean_extraction_directory(zip_path, extract_path, final_path)
-#
-#     return final_path
+@asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
+def raw_527_data() -> Path:
+    """
+    Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
+    """
+
+    url = "https://forms.irs.gov/app/pod/dataDownload/fullData"
+    base_dir = Path("output_data/irs_527")
+
+    zip_path = base_dir / "data.zip"
+    extract_path = base_dir / "unzipped/"
+    final_path = base_dir / "raw_FullDataFile.txt"
+
+    download_file(url, zip_path)
+    extract_file_from_zip(zip_path, extract_path)
+    clean_extraction_directory(zip_path, extract_path, final_path)
+
+    return final_path
 
 
-@asset(group_name="IRS_527_LANDING")#, io_manager_key="local_io_manager")
+@asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
 def data_dictionary() -> dict:
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
@@ -158,27 +158,12 @@ def fix_malformed_row(line: str) -> str:
         "landing_form8872_schedule_b": AssetOut(io_manager_key="DuckPondIOManager"),
     },
 )
-def clean_527_data(data_dictionary: dict):
+def clean_527_data(raw_527_data: Path, data_dictionary: dict):
     """
     Processes the raw_527_data file using the provided data_dictionary mappings for each form type.
     """
 
     logger = get_dagster_logger()
-
-
-    url = "https://forms.irs.gov/app/pod/dataDownload/fullData"
-    base_dir = Path("output_data/irs_527")
-
-    zip_path = base_dir / "data.zip"
-    extract_path = base_dir / "unzipped/"
-    final_path = base_dir / "raw_FullDataFile.txt"
-
-    logger.info(f"Downloading raw 527 data file")
-    download_file(url, zip_path)
-    logger.info(f"Extracting raw 527 data file")
-    extract_file_from_zip(zip_path, extract_path)
-    logger.info(f"Cleaning raw 527 data file directory structure")
-    clean_extraction_directory(zip_path, extract_path, final_path)
 
     logger.info(f"Setup for processing raw 527 data file")
     outfiles, writers = {}, {}
@@ -195,7 +180,7 @@ def clean_527_data(data_dictionary: dict):
         writers[key].writeheader()
 
     logger.info(f"Processing raw 527 data file")
-    with io.open(final_path, "r", encoding="ISO-8859-1") as raw_file:
+    with io.open(raw_527_data, "r", encoding="ISO-8859-1") as raw_file:
         reader = csv.reader(map(fix_malformed_row, raw_file), delimiter="|")
         try:
             for i, row in enumerate(reader):
@@ -212,11 +197,10 @@ def clean_527_data(data_dictionary: dict):
                     previous_row = (
                             previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                     )
-                n = 250000
-                if i % n == 0:
-                    logger.info(f"Processed {i / (1e6/n)}M rows processed so far.")
-                    if i > 0:
-                        break
+                if i % n == 250000:
+                    logger.info(f"Processed {i / 1e6}M rows processed so far.")
+                    # if i > 0:
+                    #     break
         except Exception as e:
             logger.error(f"Error processing {i}th row: {previous_row}")
             raise e
@@ -253,114 +237,56 @@ def landing_assets(
     )
 
 
-def load_sql_file(sql_file: Path):
-    with open(sql_file, "r") as f:
-        return f.read()
+sql_dir = Path("datanym/assets/IRS527/sql_scripts/")
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8872_schedule_b(
         landing_form8872_schedule_b,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_b.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8872_schedule_b=landing_form8872_schedule_b,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_b.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8872_schedule_a(
         landing_form8872_schedule_a,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_a.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8872_schedule_a=landing_form8872_schedule_a,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_a.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8872(
         landing_form8872,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8872=landing_form8872,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871_eain(
         landing_form8871_eain,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8871_eain.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8871_eain=landing_form8871_eain,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871_eain.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871_related_entities(
         landing_form8871_related_entities,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8871_related_entities=landing_form8871_related_entities,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871_directors(
         landing_form8871_directors,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8871_directors.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8871_directors=landing_form8871_directors,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871_directors.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
 def staging_form8871(
         landing_form8871,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8871.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8871=landing_form8871,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871.sql", **locals())
 
 
 @asset(group_name="IRS_527_STAGING1", io_manager_key="duckDB_creator_io_manager")
@@ -403,32 +329,14 @@ def staging_form8872_entities_schedule_a(
         landing_form8872_schedule_a,
         curated_addresses,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_a.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8872_schedule_a=landing_form8872_schedule_a,
-        curated_addresses=curated_addresses,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_a.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def staging_form8872_entities_schedule_b(
         curated_addresses, landing_form8872_schedule_b
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_b.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        curated_addresses=curated_addresses,
-        landing_form8872_schedule_b=landing_form8872_schedule_b,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_b.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
@@ -436,47 +344,21 @@ def curated_form8872_entities(
         staging_form8872_entities_schedule_a,
         staging_form8872_entities_schedule_b,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_form8872_entities.sql")
-    )
-    return SQL(
-        sql_template,
-        staging_form8872_entities_schedule_a=staging_form8872_entities_schedule_a,
-        staging_form8872_entities_schedule_b=staging_form8872_entities_schedule_b,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8872_entities.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8872_transactions(
         staging_form8872_contributions, staging_form8872_expenditures
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/curated_form8872_transactions.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        staging_form8872_contributions=staging_form8872_contributions,
-        staging_form8872_expenditures=staging_form8872_expenditures,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8872_transactions.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def staging_form8872_contributions(
         landing_form8872_schedule_a, curated_form8872_entities, curated_addresses
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872_contributions.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        curated_form8872_entities=curated_form8872_entities,
-        curated_addresses=curated_addresses,
-        landing_form8872_schedule_a=landing_form8872_schedule_a,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_contributions.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
@@ -485,30 +367,12 @@ def staging_form8872_expenditures(
         curated_form8872_entities,
         curated_addresses,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/staging_form8872_expenditures.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8872_schedule_b=landing_form8872_schedule_b,
-        curated_form8872_entities=curated_form8872_entities,
-        curated_addresses=curated_addresses,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_expenditures.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8872(landing_form8872, curated_addresses, curated_eins):
-    sql_template = load_sql_file(
-        sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_form8872.sql")
-    )
-    return SQL(
-        sql_template,
-        landing_form8872=landing_form8872,
-        curated_addresses=curated_addresses,
-        curated_eins=curated_eins,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8872.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
@@ -520,18 +384,7 @@ def curated_addresses(
         landing_form8872_schedule_a,
         landing_form8872_schedule_b,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_addresses.sql")
-    )
-    return SQL(
-        sql_template,
-        landing_form8871=landing_form8871,
-        landing_form8871_directors=landing_form8871_directors,
-        landing_form8871_related_entities=landing_form8871_related_entities,
-        landing_form8872=landing_form8872,
-        landing_form8872_schedule_a=landing_form8872_schedule_a,
-        landing_form8872_schedule_b=landing_form8872_schedule_b,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_addresses.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
@@ -541,74 +394,31 @@ def curated_eins(
         landing_form8871_directors,
         landing_form8871_related_entities,
 ):
-    sql_template = load_sql_file(
-        sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_eins.sql")
-    )
-    return SQL(
-        sql_template,
-        landing_form8871=landing_form8871,
-        landing_form8872=landing_form8872,
-        landing_form8871_directors=landing_form8871_directors,
-        landing_form8871_related_entities=landing_form8871_related_entities,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_eins.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8871(landing_form8871, curated_addresses, curated_eins):
-    sql_template = load_sql_file(
-        sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_form8871.sql")
-    )
-    return SQL(
-        sql_template,
-        landing_form8871=landing_form8871,
-        curated_addresses=curated_addresses,
-        curated_eins=curated_eins,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8871_eains(landing_form8871_eain):
-    sql_template = load_sql_file(
-        sql_file=Path("datanym/assets/IRS527/sql_scripts/curated_form8871_eains.sql")
-    )
-    return SQL(
-        sql_template,
-        landing_form8871_eain=landing_form8871_eain,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871_eains.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8871_directors(
         landing_form8871_directors, curated_addresses, curated_eins
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/curated_form8871_directors.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8871_directors=landing_form8871_directors,
-        curated_addresses=curated_addresses,
-        curated_eins=curated_eins,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871_directors.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_form8871_related_entities(
         landing_form8871_related_entities, curated_addresses, curated_eins
 ):
-    sql_template = load_sql_file(
-        sql_file=Path(
-            "datanym/assets/IRS527/sql_scripts/curated_form8871_related_entities.sql"
-        )
-    )
-    return SQL(
-        sql_template,
-        landing_form8871_related_entities=landing_form8871_related_entities,
-        curated_addresses=curated_addresses,
-        curated_eins=curated_eins,
-    )
+    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871_related_entities.sql", **locals())
 
 
 @asset(group_name="IRS_527", io_manager_key="duckDB_creator_io_manager")
