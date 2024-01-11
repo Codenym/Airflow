@@ -3,7 +3,8 @@ form_id_number as id,
 initial_report_indicator,
 amended_report_indicator,
 final_report_indicator,
-ein as ein_id,
+ein,
+organization_name,
 mail_add.id as mailing_address_id,
 e_mail_address,
 custodian_name, --people table?
@@ -20,8 +21,7 @@ insert_datetime,
 related_entity_bypass,
 eain_bypass
 
-from $staging_form8871_a as base
-         left join $curated_eins as ein on ein.id = base.ein and ein.organization_name = base.organization_name
+from $staging_form8871_1cast as base
          left join $curated_addresses as mail_add on ((mail_add.address_1 = mailing_address_1) or
                                                       (mail_add.address_1 is null and mailing_address_1 is null)) and
                                                      ((mail_add.address_2 = mailing_address_2) or

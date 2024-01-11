@@ -15,7 +15,7 @@ from dagster import (
 )
 
 
-@asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
+@asset(group_name="IRS_527")  # , io_manager_key="local_io_manager")
 def raw_527_data() -> Path:
     """
     Downloads the IRS 527 data zip file, extracts it, and prepares the data for processing.
@@ -35,7 +35,7 @@ def raw_527_data() -> Path:
     return final_path
 
 
-@asset(group_name="IRS_527_LANDING")  # , io_manager_key="local_io_manager")
+@asset(group_name="IRS_527")  # , io_manager_key="local_io_manager")
 def data_dictionary() -> dict:
     """
     Load mapping data needed for processing 527 data from an Excel file and build mappings for each record type.
@@ -145,7 +145,7 @@ def fix_malformed_row(line: str) -> str:
 
 
 @multi_asset(
-    group_name="IRS_527_LANDING",
+    group_name="IRS_527",
     outs={
         "landing_form8871": AssetOut(io_manager_key="DuckPondIOManager"),
         "landing_form8871_directors": AssetOut(io_manager_key="DuckPondIOManager"),
@@ -172,7 +172,7 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
     for key in ["1", "D", "R", "E", "2", "A", "B"]:
         if os.path.exists(f"temp_{key}.csv"):
             os.remove(f"temp_{key}.csv")
-        outfiles[key] = open(f"temp_{key}.csv", 'a')
+        outfiles[key] = open(f"temp_{key}.csv", "a")
 
         for position in range(0, len(data_dictionary[key].keys())):
             fieldnames[key].append(data_dictionary[key][position][0])
@@ -197,7 +197,7 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
                     previous_row = (
                             previous_row[:-1] + [previous_row[-1] + row[0]] + row[1:]
                     )
-                if i % n == 250000:
+                if i % 250000 == 0:
                     logger.info(f"Processed {i / 1e6}M rows processed so far.")
                     # if i > 0:
                     #     break
@@ -211,229 +211,161 @@ def clean_527_data(raw_527_data: Path, data_dictionary: dict):
 
     logger.info(f"Finished processing raw 527 data file")
     return tuple(
-        SQL("select * from read_csv_auto($csv, header=true, all_varchar=true)", csv=f"temp_{key}.csv")
+        SQL(
+            "select * from read_csv_auto($csv, header=true, all_varchar=true)",
+            csv=f"temp_{key}.csv",
+        )
         for key in ["1", "D", "R", "E", "2", "A", "B"]
     )
 
 
-@asset(group_name="IRS_527_LANDING", io_manager_key="duckDB_creator_io_manager")
-def landing_assets(
-        landing_form8871,
-        landing_form8871_directors,
-        landing_form8871_related_entities,
-        landing_form8871_eain,
-        landing_form8872,
-        landing_form8872_schedule_a,
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_schedule_b_1cast(
         landing_form8872_schedule_b,
 ):
-    return (
-        landing_form8871,
-        landing_form8871_directors,
-        landing_form8871_related_entities,
-        landing_form8871_eain,
-        landing_form8872,
-        landing_form8872_schedule_a,
-        landing_form8872_schedule_b,
-    )
-
-
-sql_dir = Path("datanym/assets/IRS527/sql_scripts/")
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8872_schedule_b(
-        landing_form8872_schedule_b,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_b.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8872_schedule_a(
-        landing_form8872_schedule_a,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_a.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8872(
-        landing_form8872,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8871_eain(
-        landing_form8871_eain,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871_eain.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8871_related_entities(
-        landing_form8871_related_entities,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8871_directors(
-        landing_form8871_directors,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871_directors.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="DuckPondIOManager")
-def staging_form8871(
-        landing_form8871,
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8871.sql", **locals())
-
-
-@asset(group_name="IRS_527_STAGING1", io_manager_key="duckDB_creator_io_manager")
-def staging1_assets(
-        landing_form8871,
-        landing_form8871_directors,
-        landing_form8871_related_entities,
-        landing_form8871_eain,
-        landing_form8872,
-        landing_form8872_schedule_a,
-        landing_form8872_schedule_b,
-        staging_form8871,
-        staging_form8871_directors,
-        staging_form8871_related_entities,
-        staging_form8871_eain,
-        staging_form8872,
-        staging_form8872_schedule_a,
-        staging_form8872_schedule_b,
-):
-    return (
-        landing_form8871,
-        landing_form8871_directors,
-        landing_form8871_related_entities,
-        landing_form8871_eain,
-        landing_form8872,
-        landing_form8872_schedule_a,
-        landing_form8872_schedule_b,
-        staging_form8871,
-        staging_form8871_directors,
-        staging_form8871_related_entities,
-        staging_form8871_eain,
-        staging_form8872,
-        staging_form8872_schedule_a,
-        staging_form8872_schedule_b,
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_b_1cast.sql",
+        **locals(),
     )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872_entities_schedule_a(
+def staging_form8872_schedule_b_2address(
+        staging_form8872_schedule_b_1cast, curated_addresses
+):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_b_2address.sql",
+        **locals(),
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8872_schedule_a_1cast(
         landing_form8872_schedule_a,
-        curated_addresses,
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_a.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_a_1cast.sql",
+        **locals(),
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872_entities_schedule_b(
-        curated_addresses, landing_form8872_schedule_b
+def staging_form8872_schedule_a_2address(
+        staging_form8872_schedule_a_1cast, curated_addresses
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_entities_schedule_b.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8872_schedule_a_2address.sql",
+        **locals(),
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8872_entities(
-        staging_form8872_entities_schedule_a,
-        staging_form8872_entities_schedule_b,
+def staging_form8872_1cast(
+        landing_form8872,
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8872_entities.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8872_1cast.sql", **locals()
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8872_transactions(
-        staging_form8872_contributions, staging_form8872_expenditures
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8872_transactions.sql", **locals())
+def staging_form8872_2address(staging_form8872_1cast, curated_addresses):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8872_2address.sql", **locals()
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872_contributions(
-        landing_form8872_schedule_a, curated_form8872_entities, curated_addresses
+def staging_form8871_eain_1cast(
+        landing_form8871_eain,
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_contributions.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_eain_1cast.sql", **locals()
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def staging_form8872_expenditures(
-        landing_form8872_schedule_b,
-        curated_form8872_entities,
-        curated_addresses,
+def staging_form8871_related_entities_1cast(
+        landing_form8871_related_entities,
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/staging_form8872_expenditures.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities_1cast.sql",
+        **locals(),
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8872(landing_form8872, curated_addresses, curated_eins):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8872.sql", **locals())
+def staging_form8871_related_entities_2address(
+        staging_form8871_related_entities_1cast, curated_addresses
+):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_related_entities_2address.sql",
+        **locals(),
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_directors_1cast(
+        landing_form8871_directors,
+):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_directors_1cast.sql",
+        **locals(),
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_directors_2address(
+        staging_form8871_directors_1cast, curated_addresses
+):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_directors_2address.sql",
+        **locals(),
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_1cast(
+        landing_form8871,
+):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_1cast.sql", **locals()
+    )
+
+
+@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+def staging_form8871_2address(staging_form8871_1cast, curated_addresses):
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/staging_form8871_2address.sql", **locals()
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
 def curated_addresses(
-        landing_form8871,
-        landing_form8871_directors,
-        landing_form8871_related_entities,
-        landing_form8872,
-        landing_form8872_schedule_a,
-        landing_form8872_schedule_b,
+        staging_form8871_1cast,
+        staging_form8871_directors_1cast,
+        staging_form8871_related_entities_1cast,
+        staging_form8872_1cast,
+        staging_form8872_schedule_a_1cast,
+        staging_form8872_schedule_b_1cast,
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_addresses.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/curated_addresses.sql", **locals()
+    )
 
 
-@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
+@asset(group_name="IRS_527_DEV", io_manager_key="DuckPondIOManager")
 def curated_eins(
-        landing_form8871,
-        landing_form8872,
-        landing_form8871_directors,
-        landing_form8871_related_entities,
+        staging_form8871_1cast,
+        staging_form8872_1cast,
 ):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_eins.sql", **locals())
-
-
-@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8871(landing_form8871, curated_addresses, curated_eins):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871.sql", **locals())
-
-
-@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8871_eains(landing_form8871_eain):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871_eains.sql", **locals())
-
-
-@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8871_directors(
-        landing_form8871_directors, curated_addresses, curated_eins
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871_directors.sql", **locals())
-
-
-@asset(group_name="IRS_527", io_manager_key="DuckPondIOManager")
-def curated_form8871_related_entities(
-        landing_form8871_related_entities, curated_addresses, curated_eins
-):
-    return SQL.from_file("datanym/assets/IRS527/sql_scripts/curated_form8871_related_entities.sql", **locals())
+    return SQL.from_file(
+        "datanym/assets/IRS527/sql_scripts/curated_eins.sql", **locals()
+    )
 
 
 @asset(group_name="IRS_527", io_manager_key="duckDB_creator_io_manager")
 def all_assets_to_duckdb(
-        curated_form8871,
-        curated_form8871_directors,
-        curated_form8871_related_entities,
-        curated_form8871_eains,
-        curated_form8872,
-        curated_form8872_entities,
-        curated_form8872_transactions,
-        staging_form8872_contributions,
-        staging_form8872_expenditures,
-        curated_addresses,
-        curated_eins,
         landing_form8871,
         landing_form8871_directors,
         landing_form8871_related_entities,
@@ -441,19 +373,23 @@ def all_assets_to_duckdb(
         landing_form8872,
         landing_form8872_schedule_a,
         landing_form8872_schedule_b,
+        staging_form8871_1cast,
+        staging_form8871_2address,
+        staging_form8871_directors_1cast,
+        staging_form8871_directors_2address,
+        staging_form8871_related_entities_1cast,
+        staging_form8871_related_entities_2address,
+        staging_form8871_eain_1cast,
+        staging_form8872_1cast,
+        staging_form8872_2address,
+        staging_form8872_schedule_a_1cast,
+        staging_form8872_schedule_a_2address,
+        staging_form8872_schedule_b_1cast,
+        staging_form8872_schedule_b_2address,
+        curated_addresses,
+        curated_eins,
 ):
     return (
-        curated_form8871,
-        curated_form8871_directors,
-        curated_form8871_related_entities,
-        curated_form8871_eains,
-        curated_form8872,
-        curated_form8872_entities,
-        curated_form8872_transactions,
-        staging_form8872_contributions,
-        staging_form8872_expenditures,
-        curated_addresses,
-        curated_eins,
         landing_form8871,
         landing_form8871_directors,
         landing_form8871_related_entities,
@@ -461,10 +397,30 @@ def all_assets_to_duckdb(
         landing_form8872,
         landing_form8872_schedule_a,
         landing_form8872_schedule_b,
+        staging_form8871_1cast,
+        staging_form8871_2address,
+        staging_form8871_directors_1cast,
+        staging_form8871_directors_2address,
+        staging_form8871_related_entities_1cast,
+        staging_form8871_related_entities_2address,
+        staging_form8871_eain_1cast,
+        staging_form8872_1cast,
+        staging_form8872_2address,
+        staging_form8872_schedule_a_1cast,
+        staging_form8872_schedule_a_2address,
+        staging_form8872_schedule_b_1cast,
+        staging_form8872_schedule_b_2address,
+        # curated_form8871,
+        # curated_form8871_directors,
+        # curated_form8871_related_entities,
+        # curated_form8871_eains,
+        # curated_form8872,
+        curated_addresses,
+        curated_eins,
     )
 
 
-@asset(group_name="IRS_527", io_manager_key="local_to_hf_io_manager")
+@asset(group_name="IRS_527_DISTRIBUTE", io_manager_key="local_to_hf_io_manager")
 def duckdb_to_hf(all_assets_to_duckdb):
     return (
         all_assets_to_duckdb,

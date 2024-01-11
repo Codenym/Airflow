@@ -5,7 +5,7 @@ with addresses as
                           mailing_address_state    as state,
                           mailing_address_zip_code as zip_code,
                           mailing_address_zip_ext  as zip_ext
-          from $staging_form8871_a
+          from $staging_form8871_1cast
           union
           select distinct custodian_address_1        as address_1,
                           custodian_address_2        as address_2,
@@ -13,7 +13,7 @@ with addresses as
                           custodian_address_state    as state,
                           custodian_address_zip_code as zip_code,
                           custodian_address_zip_ext  as zip_ext
-          from $staging_form8871_a
+          from $staging_form8871_1cast
           union
           select distinct contact_address_1        as address_1,
                           contact_address_2        as address_2,
@@ -21,7 +21,7 @@ with addresses as
                           contact_address_state    as state,
                           contact_address_zip_code as zip_code,
                           contact_address_zip_ext  as zip_ext
-          from $staging_form8871_a
+          from $staging_form8871_1cast
           union
           select distinct business_address_1        as address_1,
                           business_address_2        as address_2,
@@ -29,7 +29,7 @@ with addresses as
                           business_address_state    as state,
                           business_address_zip_code as zip_code,
                           business_address_zip_ext  as zip_ext
-          from $staging_form8871_a
+          from $staging_form8871_1cast
           union
           select distinct entity_address_1            as address_1,
                           entity_address_2            as address_2,
@@ -37,7 +37,7 @@ with addresses as
                           entity_address_st           as state,
                           entity_address_zip_code     as zip_code,
                           entity_address_zip_code_ext as zip_ext
-          from $staging_form8871_directors
+          from $staging_form8871_directors_1cast
           union
           select distinct entity_address_1            as address_1,
                           entity_address_2            as address_2,
@@ -45,7 +45,7 @@ with addresses as
                           entity_address_state        as state,
                           entity_address_zip_code     as zip_code,
                           entity_address_zip_code_ext as zip_ext
-          from $staging_form8871_related_entities
+          from $staging_form8871_related_entities_1cast
           union
           select distinct mailing_address_1        as address_1,
                           mailing_address_2        as address_2,
@@ -53,7 +53,7 @@ with addresses as
                           mailing_address_state    as state,
                           mailing_address_zip_code as zip_code,
                           mailing_address_zip_ext  as zip_ext
-          from $staging_form8872_a
+          from $staging_form8872_1cast
           union
           select distinct contact_address_1        as address_1,
                           contact_address_2        as address_2,
@@ -61,7 +61,7 @@ with addresses as
                           contact_address_state    as state,
                           contact_address_zip_code as zip_code,
                           contact_address_zip_ext  as zip_ext
-          from $staging_form8872_a
+          from $staging_form8872_1cast
           union
           select distinct business_address_1        as address_1,
                           business_address_2        as address_2,
@@ -69,7 +69,7 @@ with addresses as
                           business_address_state    as state,
                           business_address_zip_code as zip_code,
                           business_address_zip_ext  as zip_ext
-          from $staging_form8872_a
+          from $staging_form8872_1cast
           union
           select distinct custodian_address_1        as address_1,
                           custodian_address_2        as address_2,
@@ -77,7 +77,7 @@ with addresses as
                           custodian_address_state    as state,
                           custodian_address_zip_code as zip_code,
                           custodian_address_zip_ext  as zip_ext
-          from $staging_form8872_a
+          from $staging_form8872_1cast
           union
           select distinct contributor_address_1        as address_1,
                           contributor_address_2        as address_2,
@@ -85,7 +85,7 @@ with addresses as
                           contributor_address_state    as state,
                           contributor_address_zip_code as zip_code,
                           contributor_address_zip_ext  as zip_ext
-          from $staging_form8872_schedule_a
+          from $staging_form8872_schedule_a_1cast
           union
           select distinct recipient_address_1        as address_1,
                           recipient_address_2        as address_2,
@@ -93,7 +93,7 @@ with addresses as
                           recipient_address_state    as state,
                           recipient_address_zip_code as zip_code,
                           recipient_address_zip_ext  as zip_ext
-          from $staging_form8872_schedule_b)
+          from $staging_form8872_schedule_b_1cast)
 
 select uuid() as id,
        address_1,
