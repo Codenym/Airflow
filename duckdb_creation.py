@@ -4,7 +4,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 
 def get_schema_table_name(key):
-    file_name = key.split('/')[1].split('.')[0]
+    file_name = key.split('/')[-1].split('.')[0]
     schema_name = file_name.split('_')[0]
     table_name = file_name.replace(schema_name + '_', '')
     return schema_name, table_name
@@ -28,7 +28,7 @@ def run_qry(qry, connection):
 if __name__ == '__main__':
     schemas = ['landing', 'dev', 'staging', 'curated', 'analytics']
     s3_bucket = 'datanym-pipeline'
-    s3_prefix = 'duckdb/'
+    s3_prefix = 'duckdb/dev/'
     aws_profile = 'codenym'
 
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)

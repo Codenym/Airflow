@@ -242,3 +242,14 @@ def staging_house_reps(landing_house_reps):
 def staging_house_rep_terms(landing_house_rep_terms):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_rep_terms.sql"))
     return SQL(sql_template, landing_house_rep_terms=landing_house_rep_terms)
+
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def landing_districts():
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/landing_districts.sql"))
+    return SQL(sql_template)
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def staging_districts(landing_districts):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_districts.sql"))
+    return SQL(sql_template, landing_districts=landing_districts)

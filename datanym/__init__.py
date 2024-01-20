@@ -16,10 +16,10 @@ SET preserve_insertion_order = false;
 """
 
 if os.getenv('DAGSTER_CLOUD_DEPLOYMENT_NAME') == 'prod':
-    db = DuckDB(aws_env_vars=True, options=duckdb_options)
+    db = DuckDB(aws_env_vars=True, options=duckdb_options, spatial=True)
     s3_prefix = 'duckdb/prod/'
 else:
-    db = DuckDB(aws_profile='codenym', options=duckdb_options)
+    db = DuckDB(aws_profile='codenym', options=duckdb_options, spatial=True)
     s3_prefix = 'duckdb/dev/'
 
 
