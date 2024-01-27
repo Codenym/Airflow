@@ -3,16 +3,13 @@
 datanym/output_data/*
 dagster_home/*
 output_data/*
-credstash.log
-*.duckdb
-.ipynb_checkpoints
-*.ipynb
-.project
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-.DS_Store
+
 # C extensions
 *.so
 
