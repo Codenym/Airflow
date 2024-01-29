@@ -16,6 +16,6 @@ select
     vote_id,
     bill_congress,
     bill_number,
-    upper(bill_type),
+    upper(bill_type) as bill_type,
     amendment
 from $landing_house_votes

@@ -46,76 +46,6 @@ def bulk_download() -> Path:
         shutil.move("data/" + str(congress), base_dir / str(congress))
     return base_dir
 
-
-# @multi_asset(
-#         partition_defs=StaticPartitionsDefinition([str(i) for i in download_sessions]),
-#         outs = {
-#             "landing_house_votes": AssetOut(io_manager_key="DuckPondIOManager"),
-#             "landing_house_reps": AssetOut(io_manager_key="DuckPondIOManager"),
-#             "landing_house_vote_transaction": AssetOut(io_manager_key="DuckPondIOManager"),
-#         },group_name="house_assets")
-# def parse_votes(bulk_download) -> tuple[SQL, SQL, SQL]:
-#     """
-#     Parses the votes from the bulk download.
-
-#     Creates three lists:
-#     - reps: list of representatives
-#     - votes: list of votes
-#     - vote_transaction: list of how each representative voted
-
-#     """
-#     logger = get_dagster_logger()
-#     votes = []
-#     vote_transaction = []
-#     reps = []
-#     vote_cat = defaultdict(list)
-#     vote_keys = [ 
-#         'bill_number','bill_type',
-#         'amendment_author','amendment_number','amendment_type',
-#         'category','chamber','congress','date','number','question','requires','result','result_text',
-#         'session','source_url','subject','type','updated_at','vote_id']
-#     for file in Path("data/sessions/").glob("**/*.json"):
-#         # print(file)
-#         with open(file) as f:
-#             data = json.load(f)
-
-#         try:
-#             data['bill_number'] = data['bill']['number']
-#             data['bill_type'] = data['bill']['type']
-#         except: 
-#             data['bill_number'] = None
-#             data['bill_type'] = None
-
-#         try:
-#             data['amendment_author'] = data['amendment']['author']
-#             data['amendment_number'] = data['amendment']['number']
-#             data['amendment_type'] = data['amendment']['type']
-            
-#         except:
-#             data['amendment_author'] = None
-#             data['amendment_number'] = None
-#             data['amendment_type'] = None 
-        
-#         vote_cat[data['category']].append(data)
-#         vote = {}
-#         for key in vote_keys:
-#             vote[key]=data.get(key, None)
-#         votes.append(vote)
-
-#         rs=[(vote,key) for key in data["votes"].keys() for vote in data["votes"][key]]
-#         vote = {}
-#         for (v,key) in rs:
-#             vote['voter_id'] = v['id']
-#             vote['vote'] = key
-#             vote['vote_id'] = data['vote_id']
-#             vote_transaction.append(deepcopy(vote))
-
-#         rep=[vote for key in data["votes"].keys() for vote in data["votes"][key]]
-#         reps = reps + rep
-
-#     return tuple(SQL('select * from $df', df=pd.DataFrame(itm)) for itm in tuple([votes, reps, vote_transaction]))
-
-
 # parse an individual vote file
 def parse_votes_file(file: Path):
     with open(file) as f:
@@ -228,21 +158,39 @@ def staging_house_votes(landing_house_votes):
     return SQL(sql_template,landing_house_votes=landing_house_votes)
 
 @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def curated_house_votes(staging_house_votes):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_house_votes.sql"))
+    return SQL(sql_template,staging_house_votes=staging_house_votes)
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
 def staging_house_vote_transactions(landing_house_vote_transactions):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_vote_transactions.sql"))
     return SQL(sql_template, landing_house_vote_transactions=landing_house_vote_transactions)
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def curated_house_vote_transactions(staging_house_vote_transactions):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_house_vote_transactions.sql"))
+    return SQL(sql_template, staging_house_vote_transactions=staging_house_vote_transactions)
 
 @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
 def staging_house_reps(landing_house_reps):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_reps.sql"))
     return SQL(sql_template, landing_house_reps=landing_house_reps)
 
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def curated_house_reps(staging_house_reps):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_house_reps.sql"))
+    return SQL(sql_template, staging_house_reps=staging_house_reps)
 
 @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
 def staging_house_rep_terms(landing_house_rep_terms):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_rep_terms.sql"))
     return SQL(sql_template, landing_house_rep_terms=landing_house_rep_terms)
 
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def curated_house_rep_terms(staging_house_rep_terms):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_house_rep_terms.sql"))
+    return SQL(sql_template, staging_house_rep_terms=staging_house_rep_terms)
 
 @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
 def landing_districts():
@@ -253,3 +201,8 @@ def landing_districts():
 def staging_districts(landing_districts):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_districts.sql"))
     return SQL(sql_template, landing_districts=landing_districts)
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def curated_districts(staging_districts):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_districts.sql"))
+    return SQL(sql_template, staging_districts=staging_districts)

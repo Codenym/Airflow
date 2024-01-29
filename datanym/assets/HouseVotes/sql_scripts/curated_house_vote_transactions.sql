@@ -1,0 +1,1 @@
+select * from $staging_house_vote_transactions
