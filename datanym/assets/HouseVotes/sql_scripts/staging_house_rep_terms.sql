@@ -1,7 +1,7 @@
 select 
-    upper(trim(type)) as record_type,
-    cast(start as date) as start_date,
-    cast("end" as date) as end_date,
+    case when type = '' then Null else upper(trim(type)) as record_type,
+    case when start ='' then Null else cast(start as date) as start_date,
+    case when "end"='' then Null else cast("end" as date) as end_date,
     upper(trim(state)) as state,
     district,
     upper(trim(party)) as party,
@@ -14,7 +14,6 @@ select
     contact_form,
     party_affiliations,
     rss_url,
-    how,
-    upper(official_full) as official_full,
-    bioguide
+    case when official_full = '' then Null else  upper(official_full) end as official_full,
+    case when bioguide = '' then Null else bioguide end as bioguide,
 from $landing_house_rep_terms

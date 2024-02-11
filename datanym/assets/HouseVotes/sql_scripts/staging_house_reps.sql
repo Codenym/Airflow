@@ -4,7 +4,7 @@ select
     upper(official_full) as full_name,
     case when birthday = '' then Null else cast(birthday as date) end as birthday,
     upper(trim(gender)) as gender,
-    bioguide,
+    case when bioguide = '' then Null else bioguide end as bioguide,
     thomas,
     lis,
     govtrack,

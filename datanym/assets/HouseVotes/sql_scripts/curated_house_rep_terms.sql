@@ -5,6 +5,5 @@ select
     state,
     district,
     party,
-    official_full,
     bioguide
 from $staging_house_rep_terms
