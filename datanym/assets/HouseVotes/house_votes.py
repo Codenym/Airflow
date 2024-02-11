@@ -188,9 +188,9 @@ def staging_house_rep_terms(landing_house_rep_terms):
     return SQL(sql_template, landing_house_rep_terms=landing_house_rep_terms)
 
 @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
-def curated_house_rep_terms(staging_house_rep_terms):
+def curated_house_rep_terms(staging_house_rep_terms,curated_house_sessions):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_house_rep_terms.sql"))
-    return SQL(sql_template, staging_house_rep_terms=staging_house_rep_terms)
+    return SQL(sql_template, staging_house_rep_terms=staging_house_rep_terms, curated_house_sessions=curated_house_sessions)
 
 @asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
 def landing_districts():
@@ -206,3 +206,21 @@ def staging_districts(landing_districts):
 def curated_districts(staging_districts):
     sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_districts.sql"))
     return SQL(sql_template, staging_districts=staging_districts)
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def landing_house_sessions() -> SQL:
+    logger = get_dagster_logger()
+
+    df=pd.read_csv("data/congress_sessions.txt")
+    return SQL('select * from $df', df=df)
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def staging_house_sessions(landing_house_sessions):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/staging_house_sessions.sql"))
+    return SQL(sql_template, landing_house_sessions=landing_house_sessions)
+
+
+@asset(group_name="house_assets",io_manager_key="DuckPondIOManager")
+def curated_house_sessions(staging_house_sessions):
+    sql_template = load_sql_file(sql_file=Path("datanym/assets/HouseVotes/sql_scripts/curated_house_sessions.sql"))
+    return SQL(sql_template, staging_house_sessions=staging_house_sessions)
